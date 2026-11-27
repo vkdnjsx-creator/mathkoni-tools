@@ -46,7 +46,7 @@ function save(next=records,restore=false){
  try{
  const current=localStorage.getItem(STORE);
  if((storageBlocked||current!==baseline)&&!restore)throw Error('다른 창에서 변경되었거나 복원 오류가 있습니다. 백업 후 새로고침하세요.');
- const oldRows=current===null?[]:validate(JSON.parse(current));
+ let oldRows=[];if(current!==null){try{oldRows=validate(JSON.parse(current))}catch(e){if(!restore)throw e;}}
  const encoded=JSON.stringify(next);
  if(current!==encoded){if(current!==null)localStorage.setItem(STORE+'-previous',current);localStorage.setItem(STORE,encoded);if(localStorage.getItem(STORE)!==encoded)throw Error('저장 확인 실패')}
  baseline=encoded;storageBlocked=false;records=next;$('saveStatus').textContent='자동저장 완료 · '+records.length.toLocaleString()+'개 점수 기록';if(current!==encoded)refreshLinkedAchievement(oldRows,next);return true;
@@ -98,10 +98,10 @@ function txMerge(raw,scope,plans,rs,roster=rs,retained=[],mode='merge'){
   let e=p.target?t.evals.find(e=>e.id===p.target):null;
   if(matches.length&&matches[0]!==e)throw Error(p.name+'의 기존 연결 대상을 유지해야 합니다.');
   if(p.target&&(!e||Number(e.max)!==p.max||(e.sourceKey&&e.sourceKey!==p.source)))throw Error(p.name+'의 만점 또는 연결 대상이 일치하지 않습니다.');
-  if(!e){if(t.evals.some(x=>norm(x.name)===norm(p.name)))throw Error(p.name+'과 같은 이름이 있습니다. 기존 평가를 선택하세요.');e={id:txUid(),name:p.name,max:String(p.max),weight:String(p.weight),sourceKey:p.source};t.evals.push(e)}
+  if(!e){if(t.evals.some(x=>norm(x.name)===norm(p.name)))throw Error(p.name+'과 같은 이름이 있습니다. 기존 평가를 선택하세요.');e={id:txUid(),name:p.name,max:String(p.max),weight:String(p.weight),sourceKey:p.source,linkedClasses:[]};t.evals.push(e)}
   if(used.has(e.id))throw Error('한 대상 평가에 두 영역을 연결할 수 없습니다.');
   const w=txNum(p.weight);if(!Number.isFinite(w)||w<0||w>100)throw Error(p.name+'의 반영비율을 0~100%로 입력하세요.');
-  e.weight=String(w);e.sourceKey=p.source;e.liveSync=true;e.linkedClasses=[...new Set([...(Array.isArray(e.linkedClasses)?e.linkedClasses:[]),...roster.map(r=>r.cls)])].sort((a,b)=>a-b);used.add(e.id);dest.set(p.source,e)
+  const previousClasses=Array.isArray(e.linkedClasses)?e.linkedClasses:e.sourceKey===p.source?t.students.map(s=>txStudentId(s.no)).filter(Boolean).map(n=>Number(n.slice(1,-2))):[];e.weight=String(w);e.sourceKey=p.source;e.liveSync=true;e.linkedClasses=[...new Set([...previousClasses,...roster.map(r=>r.cls)])].sort((a,b)=>a-b);used.add(e.id);dest.set(p.source,e)
  }
  for(const p of retained){
   const e=t.evals.find(e=>e.id===p.id);if(!e||used.has(e.id))continue;

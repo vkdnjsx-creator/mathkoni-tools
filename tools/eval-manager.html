@@ -536,10 +536,12 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
 
     // file:// 주소는 브라우저에 따라 파일 경로마다 별도 저장소를 사용할 수 있습니다.
     let dataRestoreInProgress = true;
+    let evalSaveBaseline=null,evalSaveBlocked=false;
     let autoSaveTimeout = null;
     function persistCurrentData() {
         if (dataRestoreInProgress) return false;
         try {
+            if(evalSaveBlocked||localStorage.getItem('mathDiary_autoSaveData')!==evalSaveBaseline)throw Error('다른 창에서 변경되었거나 저장 자료 복원에 실패했습니다. 현재 화면을 JSON으로 백업한 뒤 새로고침하세요.');
             syncConfigFromUI(false);
             const reportTitle = document.getElementById('reportTitleInput').value.trim() || '수행평가 결과 통지서';
             const data = JSON.stringify({reportTitle, config:configData, students:extractStudentDataFromDOM()});
@@ -547,13 +549,15 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
             const previous = localStorage.getItem('mathDiary_autoSaveData');
             if (previous && previous !== data) localStorage.setItem('mathDiary_previousAutoSaveData', previous);
             localStorage.setItem('mathDiary_autoSaveData', data);
+            if(localStorage.getItem('mathDiary_autoSaveData')!==data)throw Error('저장 확인 실패');
+            evalSaveBaseline=data;
             const status = document.getElementById('autoSaveStatus');
             if (status) { status.textContent='✅ 자동 저장됨 · ' + new Date().toLocaleTimeString('ko-KR'); status.className='saved'; status.style.opacity='1'; }
             return true;
         } catch (e) {
             console.error('자동 저장 실패',e);
             const status = document.getElementById('autoSaveStatus');
-            if (status) { status.textContent='⚠️ 자동 저장 실패 — JSON 백업을 저장하세요'; status.className='saving'; status.style.opacity='1'; }
+            if (status) { status.textContent='⚠️ 자동 저장 실패 — '+e.message; status.className='saving'; status.style.opacity='1'; }
             return false;
         }
     }
@@ -564,6 +568,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
         clearTimeout(autoSaveTimeout);
         autoSaveTimeout = setTimeout(persistCurrentData, 400);
     };
+    window.addEventListener('storage',e=>{if(e.key==='mathDiary_autoSaveData'||e.key===null){evalSaveBlocked=true;clearTimeout(autoSaveTimeout);const w=document.getElementById('restoreWarning');w.style.display='block';w.textContent='다른 창에서 수행평가 자료가 변경되었습니다. 현재 화면을 전체 JSON으로 백업하고 새로고침하세요. 자동 덮어쓰기를 차단했습니다.';const t=document.getElementById('autoSaveStatus');t.textContent='⚠️ 다른 창 변경 · 자동저장 차단';t.style.opacity='1';}});
     window.addEventListener('pagehide', () => { clearTimeout(autoSaveTimeout); persistCurrentData(); });
     document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') { clearTimeout(autoSaveTimeout); persistCurrentData(); }
@@ -2257,7 +2262,9 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
                 preservePreviousAutoSave();
                 // 파일 종류에 맞는 복원 모드 선택
                 const isTemplateDetected = isTemplate;
+                if(evalSaveBlocked||localStorage.getItem('mathDiary_autoSaveData')!==evalSaveBaseline){if(!confirm('자동저장이 차단되었습니다. 기존 저장 자료를 백업했으며 이 파일로 교체하시겠습니까?'))throw Error('적용을 취소했습니다.');}
                 applyLoadedData(parsed, isTemplateDetected);
+                evalSaveBaseline=localStorage.getItem('mathDiary_autoSaveData');evalSaveBlocked=false;
                 dataRestoreInProgress = false;
                 document.getElementById('restoreWarning').style.display = 'none';
                 if (!persistCurrentData()) alert('불러오기는 완료했지만 브라우저 자동 저장에 실패했습니다. 전체 JSON 백업을 다운로드하세요.');
@@ -2291,6 +2298,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
                     dataRestoreInProgress = true;
                     if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
                     preservePreviousAutoSave();
+                    if(evalSaveBlocked||localStorage.getItem('mathDiary_autoSaveData')!==evalSaveBaseline)throw Error('다른 창의 자료 또는 손상된 자료를 보호 중입니다. 전체 백업을 확인한 후 새로고침하세요.');
                     applyLoadedData(parsed, true);
                     dataRestoreInProgress = false;
                     if (!persistCurrentData()) alert('불러오기는 완료했지만 브라우저 자동 저장에 실패했습니다. 전체 JSON 백업을 다운로드하세요.');
@@ -2400,18 +2408,20 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
         let loaded = false;
         try {
             const savedData = localStorage.getItem('mathDiary_autoSaveData');
+            evalSaveBaseline=savedData;
             if (savedData) {
                 applyLoadedData(JSON.parse(savedData), false);
                 loaded = true;
             }
         } catch (e) {
+            evalSaveBlocked=true;
             console.error('자동 저장 데이터 복원 실패 (기존 데이터는 보존됨)', e);
             alert('자동 저장 데이터 복원에 실패했습니다: ' + e.message + '\n기존 저장본은 삭제하지 않았습니다. 복구용 다운로드 버튼을 이용하세요.');
         }
         if (!loaded) {
             const warning = document.getElementById('restoreWarning');
             warning.style.display = 'block';
-            warning.textContent = '⚠️ 이 HTML 주소에서 자동 저장된 명단을 찾지 못했습니다. 이전 HTML 파일을 열어 JSON 전체 백업을 저장한 후 이 파일에서 불러오세요. 새 파일은 브라우저에서 다른 저장 공간으로 취급될 수 있습니다.';
+            warning.textContent = evalSaveBlocked ? '⚠️ 저장 자료를 읽지 못했습니다. 자동저장을 차단하고 기존 원본을 보존 중입니다. 복구용 백업을 다운로드한 후 정상 JSON을 불러오세요.' : '이 주소에 저장된 명단이 없습니다. 기존 PC 자료는 전체 JSON 백업으로 불러올 수 있습니다.';
             renderConfigBuilder();
             renderTableHeaders();
             renderTableFoot();
@@ -2562,7 +2572,8 @@ function trMerge(raw,plans,rows){
  function open(index){
   try{
    if(dataRestoreInProgress)throw Error('자료를 불러오는 중입니다. 잠시 후 다시 시도하세요.');
-   if(!window.applySettings())throw Error('평가 설정을 먼저 확인하세요.');
+   if(evalSaveBlocked||localStorage.getItem('mathDiary_autoSaveData')!==evalSaveBaseline)throw Error('수행평가 자동저장이 차단된 상태입니다. 전체 백업 후 새로고침하세요.');
+   if(!window.applySettings()||!persistCurrentData())throw Error('평가 설정과 자동저장 상태를 먼저 확인하세요.');
    const got=getSourceRows();if(!got.result.length)throw Error('유효한 학번과 이름이 있는 학생이 없습니다.');
    targetRaw=localStorage.getItem(TRANSFER_TARGET);snapshot=trRead(targetRaw);dest=snapshot.evals;
    source=configData.map((d,i)=>({index:i,name:trText(d.domainTitle),max:Number(d.convertedBaseScore),items:d.items})).filter(d=>d.items.length);

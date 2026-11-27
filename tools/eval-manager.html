@@ -910,7 +910,14 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
             return false;
         } finally { button.disabled = false; }
     };
-    document.getElementById('applySettingsButton').addEventListener('click', () => window.applySettings());
+    document.getElementById('applySettingsButton').addEventListener('click', () => {
+        if (window.applySettings()) {
+            const details = document.getElementById('settingsDetails');
+            details.open = false;
+            details.querySelector('summary')?.focus({preventScroll:true});
+            details.scrollIntoView({block:'nearest'});
+        }
+    });
 
     // 영역 순서만 변경하며, 각 항목의 itemId는 그대로 유지한다.
     // applySettings는 위치가 아니라 itemId로 기존 점수를 복원한다.

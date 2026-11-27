@@ -673,16 +673,19 @@
         }
     });
 
+    let queuedFileHandle=null,queuedFileData=null;
     function saveToLocalFileSystem(dataStr) {
         const handle=localFileHandle;
         if(!handle)return;
+        if(queuedFileHandle===handle&&queuedFileData===dataStr)return;
+        queuedFileHandle=handle;queuedFileData=dataStr;
         seatingFileQueue=seatingFileQueue.then(async()=>{
             if(localFileHandle!==handle)return;
             const writable=await handle.createWritable();
             await writable.write(dataStr);await writable.close();
         }).catch(error=>{
             console.error('PC 파일 저장 실패',error);
-            if(localFileHandle===handle){localFileHandle=null;document.getElementById('syncFileBtn').innerText='🔄 PC 실시간 저장 연결';document.getElementById('syncFileBtn').style.backgroundColor='#6f42c1';showToast('PC 파일 저장 실패 · 브라우저 저장 및 JSON 백업을 확인하세요.','error')}
+            if(localFileHandle===handle){queuedFileHandle=null;queuedFileData=null;localFileHandle=null;document.getElementById('syncFileBtn').innerText='🔄 PC 실시간 저장 연결';document.getElementById('syncFileBtn').style.backgroundColor='#6f42c1';showToast('PC 파일 저장 실패 · 브라우저 저장 및 JSON 백업을 확인하세요.','error')}
         });
     }
 

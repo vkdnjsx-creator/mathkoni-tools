@@ -330,12 +330,14 @@
     function sameNumber(a, b) { return Number(a) === Number(b); }
 
     // 확실히 일치하는 학생만 가져옵니다. 동명이인은 임의로 선택하지 않습니다.
-    function resolveTarget(raw) {
+    function buildContactIndex(rows){const byId=new Map(),byName=new Map();for(const st of rows){const id=contactId(st),name=String(st.name||'').trim();if(id){if(!byId.has(id))byId.set(id,[]);byId.get(id).push(st)}if(name){if(!byName.has(name))byName.set(name,[]);byName.get(name).push(st)}}return {byId,byName}}
+    function resolveTarget(raw,index=null) {
         const parsed = parseStudentInput(raw);
         if (!parsed) return { skipped: true };
         if (parsed.error) return { error: parsed.error };
         const hasId = Boolean(parsed.grade);
-        const found = dbData.filter(st => {
+        const candidates=index?(hasId?(index.byId.get(contactId(parsed))||[]):(index.byName.get(parsed.name)||[])):dbData;
+        const found = candidates.filter(st => {
             const idOk = !hasId || (sameNumber(st.grade, parsed.grade) && sameNumber(st.classNum, parsed.classNum) && sameNumber(st.studentNum, parsed.studentNum));
             const nameOk = !parsed.name || String(st.name || '').trim() === parsed.name;
             return idOk && nameOk;
@@ -345,7 +347,7 @@
         // 학번만 입력했는데 기초 데이터에 없는 경우는 이름을 추측하지 않습니다.
         if (!parsed.name) return { error: '해당 학번을 기초 데이터에서 찾을 수 없습니다.' };
         // 학번+이름 조합이 다른 이름의 등록 학생과 충돌하면 안내합니다.
-        if (hasId && dbData.some(st => sameNumber(st.grade, parsed.grade) && sameNumber(st.classNum, parsed.classNum) && sameNumber(st.studentNum, parsed.studentNum))) {
+        if (hasId && candidates.some(st => sameNumber(st.grade, parsed.grade) && sameNumber(st.classNum, parsed.classNum) && sameNumber(st.studentNum, parsed.studentNum))) {
             return { error: '해당 학번은 기초 데이터에 다른 이름으로 등록되어 있습니다.' };
         }
         // 등록되지 않은 이름은 연락처 빈칸으로 추가해 수동 입력을 허용합니다.
@@ -369,13 +371,13 @@
         const raw = textarea.value;
         if (!raw.trim()) return alert('추가할 학생 정보를 입력해주세요.');
         let count = 0, unmatched = 0;
-        const errors = [];
+        const errors = [],index=buildContactIndex(dbData),seen=new Set(targetData.map(targetKey));
         raw.split(/\r?\n/).forEach((line, i) => {
             if (!line.trim()) return;
-            const result = resolveTarget(line);
+            const result = resolveTarget(line,index);
             if (result.skipped) return;
             if (result.error) { errors.push(`${i + 1}행: ${result.error} (${line.trim()})`); return; }
-            if(!appendTarget(result.student))return;
+            const k=targetKey(result.student);if(seen.has(k))return;seen.add(k);targetData.push(normalizeContact(result.student));
             count++;
             if (result.unmatched) unmatched++;
         });

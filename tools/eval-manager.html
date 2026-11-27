@@ -286,6 +286,57 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
 @media(max-width:760px){.work-menu-tabs{gap:4px}.work-menu-tab,.work-menu-close{font-size:12px;padding:7px 8px}.work-menu-panel .side-manager{grid-template-columns:minmax(0,1fr)}.work-menu-panel{max-height:55vh}.work-menu-panel-1 .side-body>div:has(#excelInput)>div:first-child>div{flex-direction:column;align-items:flex-start}}
 }
 
+/* Desktop grading workspace: compact density, measured sticky columns, full viewport width. */
+@media screen{
+body,html.portal-embedded body{padding:0;margin:0;background:white}
+body .container,html.portal-embedded .container{width:100%;max-width:none;padding:6px 8px 10px;border:0;border-radius:0;box-shadow:none}
+body .app-topbar,html.portal-embedded .app-topbar{margin:0 0 5px;padding:0 0 5px;min-height:0;gap:6px}
+body .app-topbar h2,html.portal-embedded .app-topbar h2{font-size:16px;margin:0}
+body .app-subtitle{font-size:11px}
+body .app-layout,html.portal-embedded body .app-layout{gap:5px}
+body .work-menu-tabs{padding:0 0 4px;gap:4px}
+body .work-menu-tab,body .work-menu-close{font-size:12px;padding:5px 9px}
+body .app-main .settings-panel,html.portal-embedded .app-main .settings-panel{margin:0 0 5px}
+body .app-main #settingsDetails>summary,html.portal-embedded .app-main #settingsDetails>summary{padding:6px 9px;font-size:13px}
+body .app-main .ux-toolbar,html.portal-embedded .app-main .ux-toolbar{padding:4px 6px;margin:0 0 5px;gap:5px;align-items:center}
+body .app-main .ux-toolbar .ux-search,html.portal-embedded .app-main .ux-toolbar .ux-search{padding:5px 7px;min-width:90px;max-width:230px;font-size:12px}
+body .ux-toolbar .ux-btn{padding:5px 8px;font-size:12px}
+body .ux-count{font-size:12px;min-width:0;white-space:nowrap}
+.density-label{font-size:12px;white-space:nowrap;display:inline-flex;gap:4px;align-items:center}
+.density-label select{font:inherit;padding:4px 5px;border:1px solid #aebdcd;border-radius:5px;background:white;color:#334155}
+body .app-main .table-container,html.portal-embedded .app-main .table-container{height:var(--grading-height,calc(100vh - 145px));max-height:none;min-height:150px;border-radius:4px;overscroll-behavior:contain}
+body .bottom-btn-group,html.portal-embedded .app-main .bottom-btn-group{margin:5px 0 0;gap:5px}
+body .bottom-btn-group button{font-size:12px;padding:5px 9px;min-height:0}
+#evalTable{--n-width:36px;--id-width:62px;--name-width:72px;--num-width:54px;--raw-width:55px;--total-width:66px;--cell-padding:3px;--table-font:12px;--input-height:25px;--opt-pad:3px;--header-row:43px;table-layout:fixed;width:var(--grid-width,100%);min-width:100%;white-space:normal}
+body[data-grade-density="normal"] #evalTable{--n-width:45px;--id-width:85px;--name-width:85px;--num-width:75px;--raw-width:70px;--total-width:80px;--cell-padding:5px;--table-font:13px;--input-height:30px;--opt-pad:5px}
+body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name-width:105px;--num-width:90px;--raw-width:85px;--total-width:90px;--cell-padding:7px;--table-font:14px;--input-height:35px;--opt-pad:6px}
+#evalTable th,#evalTable td{padding:var(--cell-padding) 3px;font-size:var(--table-font);line-height:1.25;vertical-align:middle;overflow-wrap:anywhere}
+#evalTable thead th{word-break:keep-all;overflow-wrap:anywhere}
+#evalTable thead tr:nth-child(2) th{top:var(--header-row)}
+#evalTable th.sticky-col-1,#evalTable td.sticky-col-1{left:0;width:var(--n-width);min-width:0}
+#evalTable th.sticky-col-2,#evalTable td.sticky-col-2{left:var(--actual-n,var(--n-width));width:var(--id-width);min-width:0}
+#evalTable th.sticky-col-3,#evalTable td.sticky-col-3{left:var(--actual-id,calc(var(--n-width) + var(--id-width)));width:var(--name-width);min-width:0}
+#evalTable .sticky-col-1 button{display:block!important;margin:1px auto 0!important;font-size:9px!important;padding:0 3px;line-height:1.1}
+#evalTable input.stu-id,#evalTable input.stu-name,#evalTable input.score-input{width:100%;min-width:0;max-width:100%;padding:2px 3px;height:var(--input-height);box-sizing:border-box;font-size:var(--table-font);font-variant-numeric:tabular-nums}
+#evalTable input.score-input{appearance:textfield;-moz-appearance:textfield}
+#evalTable input.score-input::-webkit-inner-spin-button,#evalTable input.score-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#evalTable .score-toggle{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:2px;padding:0}
+#evalTable .score-toggle .opt{padding:var(--opt-pad) 4px;font-size:calc(var(--table-font) - 1px);line-height:1.2;white-space:normal;overflow-wrap:anywhere}
+#evalTable .domain-th{font-size:var(--table-font);line-height:1.3}
+#evalTable .domain-th span{font-size:10px!important}
+#evalTable .btn-paste-domain,#evalTable .btn-paste-col{font-size:10px!important;padding:2px 3px!important;margin:2px 0!important;white-space:normal;line-height:1.15}
+#evalTable .domain-raw,#evalTable .domain-conv,#evalTable .total-col{font-variant-numeric:tabular-nums}
+#evalTable .total-col{min-width:0;font-size:calc(var(--table-font) + 1px)}
+#evalTable tfoot td{font-size:var(--table-font)!important}
+#evalTable col.grade-number{width:var(--n-width)}
+#evalTable col.grade-id{width:var(--id-width)}
+#evalTable col.grade-name{width:var(--name-width)}
+#evalTable col.grade-numeric{width:var(--num-width)}
+#evalTable col.grade-buttons{width:var(--button-width,90px)}
+#evalTable col.grade-raw,#evalTable col.grade-conv{width:var(--raw-width)}
+#evalTable col.grade-total{width:var(--total-width)}
+@media(max-width:700px){body .container,html.portal-embedded .container{padding:4px}.density-label{margin-left:0}body .app-subtitle{display:none}body .app-main .ux-toolbar,html.portal-embedded .app-main .ux-toolbar{flex-wrap:wrap}}
+}
     </style>
 <script>if(window.self!==window.top)document.documentElement.classList.add('portal-embedded');</script>
 </head>
@@ -365,12 +416,13 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
 <input aria-label="학생 학번 또는 이름 검색" autocomplete="off" class="ux-search" id="uxStudentSearch" oninput="uxFilterStudents()" placeholder="학번 또는 이름을 입력하세요" type="search"/>
 <button class="ux-btn" onclick="uxClearSearch()" type="button">검색 해제</button>
 <span aria-live="polite" class="ux-count" id="uxStudentCount">총 0명</span>
-<button class="ux-btn primary" onclick="uxSaveNow()" title="현재 데이터를 브라우저에 즉시 저장" type="button">💾 지금 저장</button>
+<button class="ux-btn primary" onclick="uxSaveNow()" title="현재 데이터를 브라우저에 즉시 저장" type="button">💾 저장</button><label class="density-label">표 너비 <select id="gradingDensity" aria-label="채점표 표시 밀도"><option value="compact">촘촘하게</option><option value="normal">기본</option><option value="wide">넓게</option></select></label>
 
 
 
 </div><div class="ux-warn" id="uxNoMatch" style="display:none;margin:7px 0">검색 결과가 없습니다. 이름이나 학번을 다시 확인해 주세요.</div><div class="table-container">
 <table id="evalTable">
+<colgroup id="gradingCols"></colgroup>
 <thead id="tableHead"></thead>
 <tbody id="tableBody">
 <tr><td colspan="5" id="emptyMsg" style="padding: 30px; color: #777;">명단을 불러오거나 빈 칸을 생성해주세요.</td></tr>
@@ -1138,7 +1190,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
                 // 숫자 입력형 항목이 1개 이상 있는지 확인하여 영역 일괄입력 버튼 표시
                 const numItemCount = domain.items.filter(item => item.type === 'number').length;
                 const domainPasteBtn = numItemCount > 0
-                    ? `<button class="btn-paste-domain" onclick="openDomainPasteModal(${dIdx})" title="이 영역의 숫자 입력형 항목(${numItemCount}개)을 한꺼번에 붙여넣습니다">📋 영역 일괄붙여넣기</button>`
+                    ? `<button class="btn-paste-domain" onclick="openDomainPasteModal(${dIdx})" title="이 영역의 숫자 입력형 항목(${numItemCount}개)을 한꺼번에 붙여넣습니다">영역 붙여넣기</button>`
                     : '';
 
                 tr1 += `<th colspan="${colCount + 2}" class="domain-th">
@@ -1151,7 +1203,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
                 domain.items.forEach((item, iIdx) => { 
                     tr2 += `<th>
                                 ${escapeHtml(item.title)}<br>
-                                <button class="btn-paste-col" onclick="openPasteModal(${dIdx}, ${iIdx})">📋 일괄붙여넣기</button>
+                                <button class="btn-paste-col" onclick="openPasteModal(${dIdx}, ${iIdx})">붙여넣기</button>
                             </th>`; 
                 });
                 tr2 += `<th class="sub-th-raw">원점수</th>`;
@@ -1163,6 +1215,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
         tr2 += `</tr>`;
         
         thead.innerHTML = tr1 + tr2;
+        if (typeof window.updateGradingColumns === "function") window.updateGradingColumns();
         
         const emptyMsg = document.getElementById('emptyMsg');
         if (emptyMsg) emptyMsg.setAttribute('colspan', getTotalColspan());
@@ -2451,6 +2504,34 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
     document.getElementById('appSidebar').addEventListener('keydown',event=>{if(event.key==='Escape'&&active>=0){event.preventDefault();const previous=active;show(-1);buttons[previous].focus();}});
     window.toggleSidebar=function(){show(-1)};
     show(-1);
+})();
+
+
+(function(){
+ const table=document.getElementById('evalTable'),cols=document.getElementById('gradingCols'),wrap=table.closest('.table-container'),density=document.getElementById('gradingDensity');
+ const densities={compact:{n:36,id:62,name:72,num:54,raw:55,total:66,option:25},normal:{n:45,id:85,name:85,num:75,raw:70,total:80,option:31},wide:{n:52,id:95,name:105,num:90,raw:85,total:90,option:38}};
+ const storage='mathkoni-eval-density-v1';let mode='compact',frame=0;
+ try{const saved=localStorage.getItem(storage);if(densities[saved])mode=saved}catch(_){}
+ document.body.dataset.gradeDensity=mode;density.value=mode;
+ function measure(){
+  frame=0;
+  const h=table.tHead?.rows[0];if(h){const first=h.cells[0],second=h.cells[1];if(first&&second){table.style.setProperty('--actual-n',first.getBoundingClientRect().width+'px');table.style.setProperty('--actual-id',(first.getBoundingClientRect().width+second.getBoundingClientRect().width)+'px')}const group=h.querySelector('.domain-th');if(group)table.style.setProperty('--header-row',group.getBoundingClientRect().height+'px')}
+  const settings=document.getElementById('settingsDetails');
+  const top=wrap.getBoundingClientRect().top+window.scrollY;
+  const remaining=window.innerHeight-top-42;
+  wrap.style.setProperty('--grading-height',Math.max(160,settings?.open||remaining<160?Math.floor(window.innerHeight*.67):remaining)+'px');
+ }
+ function queue(){if(!frame)frame=requestAnimationFrame(measure)}
+ window.updateGradingColumns=function(){
+  const d=densities[mode],list=[];let total=0;
+  function col(cls,w){const node=document.createElement('col');node.className=cls;if(cls==='grade-buttons')node.style.setProperty('--button-width',w+'px');list.push(node);total+=w}
+  col('grade-number',d.n);col('grade-id',d.id);col('grade-name',d.name);
+  for(const domain of configData){if(!domain.items.length)continue;for(const item of domain.items){if(item.type==='button'){const opts=item.options||[];const maxLabel=Math.max(0,...opts.map(o=>String(o.txt??'').length+String(o.val??'').length+2));const w=Math.max(d.num,Math.min(mode==='compact'?125:mode==='normal'?165:210,Math.max(opts.length*d.option,Math.min(24,maxLabel)*7+8)));col('grade-buttons',w)}else col('grade-numeric',d.num)}col('grade-raw',d.raw);col('grade-conv',d.raw)}
+  col('grade-total',d.total);cols.replaceChildren(...list);table.style.setProperty('--grid-width',total+'px');queue();
+ };
+ density.onchange=()=>{mode=densities[density.value]?density.value:'compact';document.body.dataset.gradeDensity=mode;try{localStorage.setItem(storage,mode)}catch(_){}window.updateGradingColumns()};
+ window.addEventListener('resize',queue);document.getElementById('settingsDetails').addEventListener('toggle',queue);
+ const observer=new ResizeObserver(queue);observer.observe(table.tHead);observer.observe(document.getElementById('appSidebar'));observer.observe(document.querySelector('.app-main .ux-toolbar'));window.updateGradingColumns();
 })();
 
 </script>

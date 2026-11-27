@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hiedu용 문자발송 연락처 엑셀화</title>
+    <!-- 엑셀 다운로드를 위한 SheetJS 라이브러리 -->
+    <script src="../assets/xlsx-local.js"></script>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; margin: 0; padding: 20px; background-color: #f4f7f6; padding-left: 60px;}
+        h1 { color: #333; text-align: center; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        
+        button { padding: 8px 14px; background-color: #0056b3; color: white; border: none; border-radius: 4px; cursor: pointer; transition: 0.2s; font-size: 13px;}
+        button:hover { background-color: #004494; }
+        button.danger { background-color: #dc3545; }
+        button.danger:hover { background-color: #c82333; }
+        button.success { background-color: #28a745; }
+        button.success:hover { background-color: #218838; }
+        button.warning { background-color: #ffc107; color: black; }
+        button.warning:hover { background-color: #e0a800; }
+        button.info { background-color: #17a2b8; }
+        button.info:hover { background-color: #138496; }
+
+        input[type="text"] { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        
+        /* 일괄 입력 영역 (숨김 창) */
+        .batch-area { display: none; margin-top: 15px; border: 1px solid #ddd; background-color: #f9f9f9; padding: 15px; border-radius: 5px; }
+        textarea { width: 100%; height: 100px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; resize: vertical; }
+        .help-text { font-size: 12px; color: #666; margin-bottom: 10px; }
+
+        /* 결과 테이블 */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; font-size: 14px; }
+        th { background-color: #f8f9fa; }
+        td input { width: 100%; box-sizing: border-box; text-align: center; border: 1px solid #eee; background: transparent; padding: 6px; }
+        td input:focus { border-bottom: 2px solid #0056b3; outline: none; background: #fff; }
+
+        /* 좌측 사이드 패널 */
+        #sidePanel {
+            position: fixed; top: 0; left: -750px; width: 750px; height: 100vh;
+            background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.2);
+            transition: left 0.3s ease-in-out; z-index: 1000; display: flex; flex-direction: column;
+        }
+        #sidePanel.open { left: 0; } #sidePanel{width:min(750px,calc(100vw - 44px));left:calc(-1 * min(750px,calc(100vw - 44px)))} .panel-content{overflow:auto} @media(max-width:700px){body{padding:12px 12px 12px 48px}.box{padding:12px}table{min-width:600px}.box,.panel-content{overflow:auto}}
+        
+        .toggle-btn {
+            position: absolute; right: -40px; top: 50%; transform: translateY(-50%);
+            width: 40px; height: 120px; background: #343a40; color: white;
+            border: none; border-radius: 0 5px 5px 0; cursor: pointer;
+            writing-mode: vertical-rl; text-align: center; font-weight: bold; letter-spacing: 2px;
+        }
+        .toggle-btn:hover { background: #23272b; }
+        
+        .panel-content { padding: 20px; overflow-y: auto; flex: 1; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px; }
+        .controls-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; }
+
+        /* 저장 알림 메시지 애니메이션 */
+        .save-indicator {
+            font-size: 13px; color: #28a745; font-weight: bold;
+            opacity: 0; transition: opacity 0.3s ease-in-out;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<!-- 좌측 사이드 패널 (기초 데이터 입력 및 관리) -->
+<div id="sidePanel">
+    <button class="toggle-btn" onclick="togglePanel()">기초 데이터 관리 ▶</button>
+    <div class="panel-content">
+        <div class="panel-header">
+            <div style="display: flex; align-items: center;">
+                <h2 style="margin: 0;">1. 기초 데이터 관리</h2>
+                <span id="dbSaveIndicator" class="save-indicator">💾 PC 실시간 저장됨</span>
+            </div>
+            <div>
+                <button class="info" onclick="downloadDbExcel()">기초 데이터 백업(.xlsx)</button>
+                <button class="danger" onclick="clearDbData()">초기화</button>
+            </div>
+        </div>
+
+        <div class="controls-row">
+            <button onclick="toggleDbBatchInput()">+ 기초 데이터 엑셀 일괄 추가 (열기/닫기)</button>
+        </div>
+        
+        <div id="dbBatchInputArea" class="batch-area">
+            <p class="help-text">
+                엑셀에서 <b>[학년 | 반 | 번호 | 이름 | 학생번호 | 학부모번호]</b> 순서로 영역을 복사해 붙여넣으세요.
+            </p>
+            <textarea id="dbExcelData" placeholder="예시:&#10;1   2   15   홍길동   010-1234-5678   010-8765-4321"></textarea>
+            <div style="margin-top: 10px; text-align: right;">
+                <button class="success" onclick="saveDbBatchData()">확인 (일괄 저장)</button>
+            </div>
+        </div>
+
+        <p class="help-text">※ 아래 표의 칸을 클릭해 내용을 수정하면 글자를 칠 때마다 즉시 PC에 자동 저장됩니다.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 50px;">학년</th><th style="width: 50px;">반</th><th style="width: 50px;">번호</th>
+                    <th>이름</th><th>학생번호</th><th>학부모번호</th><th style="width: 60px;">관리</th>
+                </tr>
+            </thead>
+            <tbody id="dbTbody">
+                <!-- 전체 DB 데이터가 여기에 그려짐 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 메인 화면 (문자발송 대상 학생 관리) -->
+<div class="container">
+    <h1>Hiedu용 문자발송 연락처 엑셀화</h1><div class="box"><p style="font-size:13px;color:#526579">연락처는 이 브라우저에만 보관됩니다. 공용 PC 사용 및 개인정보가 포함된 파일의 공개 업로드를 금지합니다.</p><button onclick="contactBackup()">전체 JSON 백업</button> <button onclick="document.getElementById('contactFile').click()">전체 JSON 복원</button><input id="contactFile" type="file" accept=".json" hidden onchange="contactRestore(event)"> <button onclick="refreshTargetContacts()">발송 대상 연락처 갱신</button></div>
+
+    <div class="box">
+        <div class="panel-header">
+            <div style="display: flex; align-items: center;">
+                <h2 style="margin: 0; color: #0056b3;">2. 문자발송 대상 학생</h2>
+                <span id="targetSaveIndicator" class="save-indicator">💾 PC 실시간 저장됨</span>
+            </div>
+            <button class="danger" onclick="clearTargetData()">초기화 (대상 전체 삭제)</button>
+        </div>
+
+        <div class="controls-row">
+            <input type="text" id="singleNameInput" placeholder="이름·학번 자유 입력 (예: 김민수 1205)" style="width: 300px; max-width: 100%;" onkeyup="if(event.keyCode==13) addSingleTarget()">
+            <button onclick="addSingleTarget()">추가</button>
+            <button class="warning" onclick="toggleTargetBatchInput()">+ 학생 정보 엑셀 일괄 추가 (열기/닫기)</button>
+        </div>
+        
+        <div id="targetBatchInputArea" class="batch-area">
+            <p class="help-text">이름과 학번의 순서에 관계없이 자동 인식합니다. 엑셀 복사·붙여넣기도 가능합니다.<br>
+                예: <b>1205 김민수 / 김민수 1205 / 1 2 5 김민수 / 김민수 1학년 2반 5번 / 김민수</b><br>
+                ※ 이름만 입력했을 때 동명이인은 추가하지 않고 안내합니다.
+            </p>
+            <textarea id="targetExcelData" placeholder="1205 김민수&#10;이영희 1302&#10;김철수 1학년 2반 5번&#10;1 2 15 홍길동"></textarea>
+            <div style="margin-top: 10px; text-align: right;">
+                <button class="success" onclick="saveTargetBatchData()">확인 (일괄 추가)</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+            <p class="help-text" style="margin: 0;">
+                ※ 아래 버튼 클릭 시 문자발송용(학생/학부모 개별 2줄 양식)으로만 깔끔하게 출력됩니다.
+            </p>
+            <button class="success" style="padding: 10px 20px; font-weight: bold;" onclick="downloadExcel()">결과 엑셀(.xlsx) 다운로드</button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 45px;">학년</th>
+                    <th style="width: 45px;">반</th>
+                    <th style="width: 45px;">번호</th>
+                    <th style="width: 80px;">이름</th>
+                    <th>학생 번호</th>
+                    <th>학부모 번호</th>
+                    <th style="width: 50px;">관리</th>
+                </tr>
+            </thead>
+            <tbody id="targetTbody">
+                <!-- 대상 학생 데이터가 여기에 그려짐 -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const DBKEY='hiedu_dbData', TARGETKEY='hiedu_targetData';
+    const baseline={},blocked=new Set();
+    const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const fields=['grade','classNum','studentNum','name','sPhone','pPhone'];
+    function normalizeContact(s){if(!s||typeof s!=='object')throw Error('연락처 자료 오류');return Object.fromEntries(fields.map(k=>[k,String(s[k]??'').trim()]));}
+    function readContacts(key){try{const raw=localStorage.getItem(key);baseline[key]=raw;if(raw===null)return [];const data=JSON.parse(raw);if(!Array.isArray(data))throw Error('배열 형식 오류');return data.map(normalizeContact)}catch(e){blocked.add(key);return []}}
+    function saveContacts(key,rows){
+      const indicator=document.getElementById(key===DBKEY?'dbSaveIndicator':'targetSaveIndicator');
+      try{const old=localStorage.getItem(key);if(blocked.has(key)||old!==baseline[key])throw Error('다른 창의 변경 또는 저장 자료 오류');const next=JSON.stringify(rows);if(old!==next){if(old!==null)localStorage.setItem(key+'-previous',old);localStorage.setItem(key,next);if(localStorage.getItem(key)!==next)throw Error('저장 확인 실패');baseline[key]=next}indicator.textContent='PC 자동 저장 완료';indicator.style.color='#166534';showSaveIndicator(indicator.id);return true}
+      catch(e){indicator.textContent='자동 저장 차단 · JSON 백업 필요';indicator.style.opacity='1';indicator.style.color='#b91c1c';return false}
+    }
+    function contactId(st){return [st.grade,st.classNum,st.studentNum].every(x=>/^\d{1,2}$/.test(String(x))&&Number(x)>0)&&Number(st.grade)<=9&&Number(st.classNum)<=99&&Number(st.studentNum)<=99?[Number(st.grade),Number(st.classNum),Number(st.studentNum)].join('-'):''}
+    function phoneOK(v){return !v||/^(?:\+82[- ]?)?0?[0-9][0-9 -]{7,14}$/.test(v)}
+    function targetKey(s){return contactId(s)||'name:'+String(s.name||'').trim()}
+    function appendTarget(s){if(targetData.some(t=>targetKey(t)===targetKey(s)))return false;targetData.push(normalizeContact(s));return true}
+    let dbData=readContacts(DBKEY),targetData=readContacts(TARGETKEY);
+    window.addEventListener('storage',e=>{for(const key of [DBKEY,TARGETKEY])if(e.key===key||e.key===null){blocked.add(key);const el=document.getElementById(key===DBKEY?'dbSaveIndicator':'targetSaveIndicator');el.textContent='다른 창 변경 · 백업 후 새로고침';el.style.color='#b91c1c';el.style.opacity='1'}});
+    function contactBackup(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({format:'mathkoni-hiedu-v1',dbData,targetData},null,2)],{type:'application/json'}));a.download='문자발송_전체백업.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+    async function contactRestore(e){try{const f=e.target.files[0];if(!f)return;const o=JSON.parse(await f.text());if(o.format!=='mathkoni-hiedu-v1'||!Array.isArray(o.dbData)||!Array.isArray(o.targetData))throw Error('지원하지 않는 백업 파일입니다.');const d=o.dbData.map(normalizeContact),t=o.targetData.map(normalizeContact);if(!confirm('기초 자료와 발송 대상자를 교체할까요? 현재 자료는 먼저 백업해 주세요.'))return;for(const key of [DBKEY,TARGETKEY]){baseline[key]=localStorage.getItem(key);blocked.delete(key)}dbData=d;targetData=t;const a=saveContacts(DBKEY,dbData),b=saveContacts(TARGETKEY,targetData);renderDbData();renderTargetData();alert(a&&b?'복원 완료':'화면 복원 완료 · 일부 자동 저장 실패')}catch(err){alert(err.message)}finally{e.target.value=''}}
+
+    let saveTimeout;
+
+    window.onload = function() {
+        renderDbData();
+        renderTargetData();
+        for(const key of blocked){const el=document.getElementById(key===DBKEY?'dbSaveIndicator':'targetSaveIndicator');el.textContent='복원 실패 · 원본 보존';el.style.color='#b91c1c';el.style.opacity='1';}
+    };
+
+    // 시각적 저장 알림
+    function showSaveIndicator(elementId) {
+        const indicator = document.getElementById(elementId);
+        indicator.style.opacity = '1';
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => { indicator.style.opacity = '0'; }, 1500);
+    }
+
+    // UI 토글
+    function togglePanel() {
+        const panel = document.getElementById('sidePanel');
+        const btn = panel.querySelector('.toggle-btn');
+        panel.classList.toggle('open');
+        btn.innerText = panel.classList.contains('open') ? '기초 데이터 관리 ◀' : '기초 데이터 관리 ▶';
+    }
+    function toggleDbBatchInput() {
+        const area = document.getElementById('dbBatchInputArea');
+        area.style.display = area.style.display === 'block' ? 'none' : 'block';
+    }
+    function toggleTargetBatchInput() {
+        const area = document.getElementById('targetBatchInputArea');
+        area.style.display = area.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // ==========================================
+    // 좌측: 기초 데이터 (DB) 로직
+    // ==========================================
+    function saveDbBatchData() {
+        const el=document.getElementById('dbExcelData'),lines=el.value.split(/\r?\n/), incoming=[],errors=[];
+        for(let i=0;i<lines.length;i++){if(!lines[i].trim())continue;const c=lines[i].split('\t');if(c[0].trim()==='학년')continue;if(c.length<6){errors.push(i+1);continue}
+          const st=normalizeContact(Object.fromEntries(fields.map((k,j)=>[k,c[j]])));
+          if(!contactId(st)||!st.name||!phoneOK(st.sPhone)||!phoneOK(st.pPhone)){errors.push(i+1);continue}incoming.push(st);
+        }
+        if(errors.length)return alert('학번·이름·연락처 형식 확인 필요: '+errors.join(', ')+'행. 아무 자료도 추가하지 않았습니다.');
+        if(!incoming.length)return alert('추가할 자료가 없습니다.');
+        const byId=new Map(dbData.filter(x=>contactId(x)).map(x=>[contactId(x),x])), seen=new Set();
+        for(const st of incoming){const id=contactId(st);if(seen.has(id)||byId.has(id)&&byId.get(id).name!==st.name)return alert('중복 학번 또는 이름 불일치가 있습니다. 기존 자료를 확인하세요.');seen.add(id)}
+        for(const st of incoming){const old=byId.get(contactId(st));if(old)Object.assign(old,st);else dbData.push(st)}
+        saveContacts(DBKEY,dbData);renderDbData();el.value='';toggleDbBatchInput();alert(incoming.length+'건 추가 또는 갱신');
+    }
+
+    function updateDbData(index, field, value) {
+        dbData[index][field] = value;
+        saveContacts(DBKEY,dbData);
+        showSaveIndicator('dbSaveIndicator');
+    }
+
+    function deleteDbData(index) {
+        if(confirm("기초 데이터에서 이 학생을 삭제하시겠습니까?")) {
+            dbData.splice(index, 1);
+            saveContacts(DBKEY,dbData);
+            renderDbData();
+            showSaveIndicator('dbSaveIndicator');
+        }
+    }
+
+    function clearDbData() {
+        if(confirm("⚠️ 경고: 저장된 '모든 기초 데이터'가 PC에서 완전히 삭제됩니다. 계속하시겠습니까?")) {
+            dbData = [];
+            saveContacts(DBKEY,dbData);
+            renderDbData();
+        }
+    }
+
+    function renderDbData() {
+        const tbody = document.getElementById('dbTbody');
+        tbody.innerHTML = '';
+        dbData.forEach((st, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="${esc(st.grade || '')}" oninput="updateDbData(${idx}, 'grade', this.value)"></td>
+                <td><input type="text" value="${esc(st.classNum || '')}" oninput="updateDbData(${idx}, 'classNum', this.value)"></td>
+                <td><input type="text" value="${esc(st.studentNum || '')}" oninput="updateDbData(${idx}, 'studentNum', this.value)"></td>
+                <td><input type="text" value="${esc(st.name || '')}" oninput="updateDbData(${idx}, 'name', this.value)"></td>
+                <td><input type="text" value="${esc(st.sPhone || '')}" oninput="updateDbData(${idx}, 'sPhone', this.value)"></td>
+                <td><input type="text" value="${esc(st.pPhone || '')}" oninput="updateDbData(${idx}, 'pPhone', this.value)"></td>
+                <td><button class="danger" style="padding: 4px 8px; font-size:12px;" onclick="deleteDbData(${idx})">삭제</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ==========================================
+    // 중앙: 문자발송 대상 학생 로직 (동명이인 구별 추가)
+    // ==========================================
+    
+    // 학생 식별자는 4자리: 학년(1자리) + 반(1자리) + 번호(2자리)입니다.
+    // 이름 앞/뒤의 학번, 학년-반-번호, 탭/쉼표/슬래시/공백을 모두 지원합니다.
+    function parseStudentInput(raw) {
+        let text = String(raw || '').trim().replace(/[\u00a0\u200b]/g, ' ');
+        if (!text) return null;
+        // 학년/반/번호/이름 같은 엑셀 헤더는 입력값에서 제외
+        if (/^(?:학번|학년|반|번호|이름|성명)(?:[\s,\t/|]+(?:학번|학년|반|번호|이름|성명))*$/.test(text)) return null;
+        const names = [...text.matchAll(/[가-힣]{2,}(?:[·ㆍ][가-힣]+)?|[A-Za-z]+(?:[ .][A-Za-z]+)*/g)];
+        // '학년', '반', '번호'를 이름으로 잘못 해석하지 않도록 숫자 단위를 먼저 정리합니다.
+        let normalized = text.replace(/(\d+)\s*학년/g, '$1 ').replace(/(\d+)\s*반/g, '$1 ').replace(/(\d+)\s*번(?:호)?/g, '$1 ');
+        normalized = normalized.replace(/\s*[-–—/|,:;·]+\s*/g, ' ').replace(/[()\[\]]/g, ' ').trim();
+        const tokens = normalized.split(/\s+/).filter(Boolean);
+        const numeric = tokens.filter(t => /^\d+$/.test(t));
+        const name = tokens.filter(t => !/^\d+$/.test(t)).join(' ').trim();
+        let grade = '', classNum = '', studentNum = '';
+        if (numeric.length === 1 && /^\d{4,5}$/.test(numeric[0])) {
+            grade = numeric[0][0]; classNum = String(Number(numeric[0].slice(1,-2))); studentNum = String(Number(numeric[0].slice(-2)));
+        } else if (numeric.length === 3 && numeric.every(n => /^\d{1,2}$/.test(n))) {
+            [grade, classNum, studentNum] = numeric.map(n => String(Number(n)));
+        } else if (numeric.length) {
+            return { error: '학번은 4·5자리(예: 1205, 11005), 또는 학년/반/번호(예: 1 2 5)로 입력해주세요.' };
+        }
+        if (numeric.length && (!+grade || !+classNum || !+studentNum || +grade > 9 || +classNum > 99 || +studentNum > 99)) {
+            return { error: '학번의 학년·반·번호를 확인해주세요.' };
+        }
+        if (!name && !numeric.length) return null;
+        return { grade, classNum, studentNum, name };
+    }
+
+    function sameNumber(a, b) { return Number(a) === Number(b); }
+
+    // 확실히 일치하는 학생만 가져옵니다. 동명이인은 임의로 선택하지 않습니다.
+    function resolveTarget(raw) {
+        const parsed = parseStudentInput(raw);
+        if (!parsed) return { skipped: true };
+        if (parsed.error) return { error: parsed.error };
+        const hasId = Boolean(parsed.grade);
+        const found = dbData.filter(st => {
+            const idOk = !hasId || (sameNumber(st.grade, parsed.grade) && sameNumber(st.classNum, parsed.classNum) && sameNumber(st.studentNum, parsed.studentNum));
+            const nameOk = !parsed.name || String(st.name || '').trim() === parsed.name;
+            return idOk && nameOk;
+        });
+        if (found.length === 1) return { student: {...found[0]} };
+        if (found.length > 1) return { error: `동일 조건의 기초 데이터가 ${found.length}건 있습니다. 기초 데이터를 확인해주세요.` };
+        // 학번만 입력했는데 기초 데이터에 없는 경우는 이름을 추측하지 않습니다.
+        if (!parsed.name) return { error: '해당 학번을 기초 데이터에서 찾을 수 없습니다.' };
+        // 학번+이름 조합이 다른 이름의 등록 학생과 충돌하면 안내합니다.
+        if (hasId && dbData.some(st => sameNumber(st.grade, parsed.grade) && sameNumber(st.classNum, parsed.classNum) && sameNumber(st.studentNum, parsed.studentNum))) {
+            return { error: '해당 학번은 기초 데이터에 다른 이름으로 등록되어 있습니다.' };
+        }
+        // 등록되지 않은 이름은 연락처 빈칸으로 추가해 수동 입력을 허용합니다.
+        return { student: { ...parsed, sPhone: '', pPhone: '' }, unmatched: true };
+    }
+
+    function addSingleTarget() {
+        const input = document.getElementById('singleNameInput');
+        const raw = input.value.trim();
+        if (!raw) return alert('추가할 학생 정보를 입력하세요.');
+        const result = resolveTarget(raw);
+        if (result.error || result.skipped) return alert(result.error || '입력 내용을 확인해주세요.');
+        if(!appendTarget(result.student))return alert('이미 등록된 학생입니다.');
+        input.value = '';
+        saveAndRenderTarget();
+        if (result.unmatched) alert('기초 데이터에 일치하는 학생이 없어 연락처를 빈칸으로 추가했습니다.');
+    }
+
+    function saveTargetBatchData() {
+        const textarea = document.getElementById('targetExcelData');
+        const raw = textarea.value;
+        if (!raw.trim()) return alert('추가할 학생 정보를 입력해주세요.');
+        let count = 0, unmatched = 0;
+        const errors = [];
+        raw.split(/\r?\n/).forEach((line, i) => {
+            if (!line.trim()) return;
+            const result = resolveTarget(line);
+            if (result.skipped) return;
+            if (result.error) { errors.push(`${i + 1}행: ${result.error} (${line.trim()})`); return; }
+            if(!appendTarget(result.student))return;
+            count++;
+            if (result.unmatched) unmatched++;
+        });
+        if (count) saveAndRenderTarget();
+        // 오류 행은 수정할 수 있도록 입력창에 남겨둡니다.
+        if (errors.length > 0) textarea.value=errors.map(line=>raw.split(/\r?\n/)[Number(line.match(/^\d+/)[0])-1]).join('\n');
+        if (errors.length === 0) {
+            textarea.value = '';
+            document.getElementById('targetBatchInputArea').style.display = 'none';
+        }
+        alert(`${count}명 추가 완료${unmatched ? ` (연락처 미등록 ${unmatched}명)` : ''}.${errors.length ? `\n\n확인 필요한 ${errors.length}행:\n${errors.slice(0, 12).join('\n')}` : ''}`);
+    }
+
+    function updateTargetData(index, field, value) {
+        targetData[index][field] = value;
+        saveContacts(TARGETKEY,targetData);
+        showSaveIndicator('targetSaveIndicator');
+    }
+
+    function deleteTargetData(index) {
+        targetData.splice(index, 1);
+        saveAndRenderTarget();
+    }
+
+    function clearTargetData() {
+        if(confirm("발송 대상 목록을 초기화하시겠습니까? (기초 데이터는 삭제되지 않습니다.)")) {
+            targetData = [];
+            saveAndRenderTarget();
+        }
+    }
+
+    function saveAndRenderTarget() {
+        saveContacts(TARGETKEY,targetData);
+        renderTargetData();
+        showSaveIndicator('targetSaveIndicator');
+    }
+
+    function renderTargetData() {
+        const tbody = document.getElementById('targetTbody');
+        tbody.innerHTML = '';
+        
+        if(targetData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7">등록된 문자발송 대상 학생이 없습니다.</td></tr>';
+            return;
+        }
+
+        targetData.forEach((st, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="${esc(st.grade || '')}" oninput="updateTargetData(${idx}, 'grade', this.value)"></td>
+                <td><input type="text" value="${esc(st.classNum || '')}" oninput="updateTargetData(${idx}, 'classNum', this.value)"></td>
+                <td><input type="text" value="${esc(st.studentNum || '')}" oninput="updateTargetData(${idx}, 'studentNum', this.value)"></td>
+                <td><input type="text" value="${esc(st.name || '')}" oninput="updateTargetData(${idx}, 'name', this.value)"></td>
+                <td><input type="text" value="${esc(st.sPhone || '')}" placeholder="학생번호 입력" oninput="updateTargetData(${idx}, 'sPhone', this.value)"></td>
+                <td><input type="text" value="${esc(st.pPhone || '')}" placeholder="학부모번호 입력" oninput="updateTargetData(${idx}, 'pPhone', this.value)"></td>
+                <td><button class="danger" style="padding: 4px; font-size:12px; width:100%;" onclick="deleteTargetData(${idx})">삭제</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ==========================================
+    // 엑셀 다운로드 (SheetJS)
+    // ==========================================
+    
+    // 1. 발송 대상 엑셀 다운로드 (특별 포맷: 1학생당 2줄)
+    function refreshTargetContacts(){
+        let n=0;const updates=[];
+        for(const t of targetData){const id=contactId(t);if(!id)continue;const matches=dbData.filter(d=>contactId(d)===id&&d.name===t.name);if(matches.length===1&&(matches[0].sPhone!==t.sPhone||matches[0].pPhone!==t.pPhone)){updates.push([t,matches[0]]);n++}}
+        if(!n)return alert('갱신할 연락처가 없습니다.');
+        if(!confirm(n+'명의 연락처를 기초자료에 맞춰 갱신할까요? 수동 수정된 연락처도 교체됩니다.'))return;
+        for(const [t,d] of updates){t.sPhone=d.sPhone;t.pPhone=d.pPhone}saveAndRenderTarget();
+    }
+    function downloadExcel() {
+        if(targetData.length === 0) {
+            alert("다운로드할 데이터가 없습니다.");
+            return;
+        }
+
+        const excelData = [];
+        targetData.forEach(st => {
+            const studentName = st.name || "이름없음";
+            
+            // 첫 번째 줄: 학생이름 / 학생연락처
+            excelData.push({
+                "이름": studentName,
+                "연락처": st.sPhone || ""
+            });
+            
+            // 두 번째 줄: 학생이름+"학부모님" / 학부모연락처
+            excelData.push({
+                "이름": studentName + "학부모님",
+                "연락처": st.pPhone || ""
+            });
+        });
+
+        if(!globalThis.mathkoniXlsx)return alert('엑셀 기능 파일을 불러오지 못했습니다. 새로고침하세요.');
+        const keys=new Set();if(targetData.some(st=>{const k=targetKey(st);const bad=keys.has(k)||!st.name||(!st.sPhone&&!st.pPhone)||!phoneOK(st.sPhone)||!phoneOK(st.pPhone);keys.add(k);return bad}))return alert('중복 학생 또는 이름·연락처 오류가 있습니다. 발송 대상을 확인하세요.');
+        if(excelData.some(x=>!x['연락처'])&&!confirm('일부 연락처가 비어 있습니다. 빈 연락처를 제외하고 출력할까요?'))return;
+        mathkoniXlsx.download([['이름','연락처'],...excelData.filter(x=>x['연락처']).map(x=>[x['이름'],x['연락처']])],'문자발송대상','Hiedu_문자발송대상.xlsx');
+    }
+
+    // 2. 기초 데이터 엑셀 백업 다운로드
+    function downloadDbExcel() {
+        if(dbData.length === 0) {
+            alert("백업할 기초 데이터가 없습니다.");
+            return;
+        }
+
+        const excelData = dbData.map(st => ({
+            "학년": st.grade, "반": st.classNum, "번호": st.studentNum,
+            "이름": st.name, "학생번호": st.sPhone, "학부모번호": st.pPhone
+        }));
+
+        if(!globalThis.mathkoniXlsx)return alert('엑셀 기능 파일을 불러오지 못했습니다.');
+        mathkoniXlsx.download([['학년','반','번호','이름','학생번호','학부모번호'],...dbData.map(st=>fields.map(k=>st[k]))],'기초데이터','Hiedu_기초데이터_백업.xlsx');
+    }
+</script>
+</body>
+</html>

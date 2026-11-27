@@ -285,8 +285,6 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
 @media(max-width:760px){.work-menu-tabs{gap:4px}.work-menu-tab,.work-menu-close{font-size:12px;padding:7px 8px}.work-menu-panel .side-manager{grid-template-columns:minmax(0,1fr)}.work-menu-panel{max-height:55vh}.work-menu-panel-1 .side-body>div:has(#excelInput)>div:first-child>div{flex-direction:column;align-items:flex-start}}
 }
 
-/* Local achievement transfer dialog */
-#achievementTransferDialog{width:min(840px,calc(100vw - 28px));max-height:88vh;overflow:auto;border:1px solid #cbd5e1;border-radius:12px;padding:20px;color:#1e293b;font-family:inherit;box-sizing:border-box}#achievementTransferDialog::backdrop{background:#142a4266}#achievementTransferDialog h3{margin:0 0 8px;color:#163b66;font-size:20px}#achievementTransferDialog h4{margin:12px 0 6px;font-size:14px}#achievementTransferDialog p{font-size:12px;line-height:1.55;margin:6px 0;color:#526579}.transfer-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}.transfer-actions button{padding:6px 10px;border:1px solid #cbd5e1;border-radius:6px;background:white;color:#334155;cursor:pointer;font-weight:650}.transfer-actions button.transfer-primary{background:#2458a6;color:#fff;border-color:#2458a6}.transfer-actions button:disabled{opacity:.5;cursor:not-allowed}.transfer-domain{display:grid;grid-template-columns:minmax(150px,1fr) minmax(160px,1fr) 110px;align-items:center;gap:8px;border-bottom:1px solid #dce3eb;padding:8px 0}.transfer-domain select,.transfer-domain input[type=number]{min-width:0;width:100%;padding:6px;border:1px solid #cbd5e1;border-radius:6px;box-sizing:border-box}.transfer-weight{display:flex;align-items:center;gap:4px}.transfer-domain-name,.transfer-class,.transfer-student{font-size:13px;display:flex;align-items:center;gap:4px;overflow-wrap:anywhere}.transfer-domain-name input,.transfer-class input,.transfer-student input{flex:none}.transfer-classes{display:flex;gap:6px;flex-wrap:wrap}.transfer-class{border:1px solid #dce3eb;border-radius:6px;padding:6px 8px;background:#f7f9fc}.transfer-students{max-height:190px;overflow:auto;border:1px solid #dce3eb;border-radius:8px;padding:8px}.transfer-student-group{margin:3px 0 8px}.transfer-student-group strong{font-size:12px;color:#415a75}.transfer-student-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:6px}.transfer-student{padding:3px}.transfer-ready{display:flex;gap:6px;align-items:flex-start;font-size:13px;font-weight:650;margin-top:10px}.transfer-error{color:#a52323!important}.transfer-footer{position:sticky;bottom:-20px;background:#fff;border-top:1px solid #dce3eb;padding:8px 0 12px}.transfer-last{font-size:12px;color:#166534}.transfer-btn{background:#2458a6!important;color:white!important;border-color:#2458a6!important}.transfer-header-btn{background:#fff;color:#174e97;border:1px solid #94b6e2;border-radius:4px;font-size:11px;cursor:pointer;padding:3px 6px;margin-left:4px;white-space:nowrap}@media(max-width:600px){.transfer-domain{grid-template-columns:1fr 100px}.transfer-domain-name{grid-column:1/-1}#achievementTransferDialog{padding:12px}.transfer-footer{bottom:-12px}}
     </style>
 <script>if(window.self!==window.top)document.documentElement.classList.add('portal-embedded');</script>
 </head>
@@ -366,7 +364,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
 <input aria-label="학생 학번 또는 이름 검색" autocomplete="off" class="ux-search" id="uxStudentSearch" oninput="uxFilterStudents()" placeholder="학번 또는 이름을 입력하세요" type="search"/>
 <button class="ux-btn" onclick="uxClearSearch()" type="button">검색 해제</button>
 <span aria-live="polite" class="ux-count" id="uxStudentCount">총 0명</span>
-<button class="ux-btn primary" onclick="uxSaveNow()" title="현재 데이터를 브라우저에 즉시 저장" type="button">💾 지금 저장</button><button type="button" class="ux-btn transfer-btn" onclick="openAchievementTransfer()">성취도에 반영</button><span class="transfer-last" id="transferLastStatus" role="status"></span>
+<button class="ux-btn primary" onclick="uxSaveNow()" title="현재 데이터를 브라우저에 즉시 저장" type="button">💾 지금 저장</button>
 
 
 
@@ -426,7 +424,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
 </div>
 </div>
 </div>
-<dialog id="achievementTransferDialog" aria-labelledby="transferTitle"><h3 id="transferTitle">성취도 목표점수에 반영</h3><p>현재 수행평가의 최종 환산점수(반영 만점)를 선택한 학생에게 전달합니다. 자료는 이 브라우저에만 저장됩니다.</p><h4>1. 평가 영역 선택 · 성취도 평가 연결</h4><p>같은 이름과 만점인 기존 평가가 있으면 자동 연결됩니다. 기존 평가의 반영비율은 유지하고, 새 평가만 비율을 입력합니다.</p><div class="transfer-actions"><button type="button" id="transferAllDomains">영역 전체 선택</button><button type="button" id="transferNoDomains">영역 선택 해제</button></div><div id="transferDomains"></div><h4>2. 반별 또는 학생별 선택</h4><div class="transfer-actions"><button type="button" id="transferAllStudents">학생 전체 선택</button><button type="button" id="transferNoStudents">학생 선택 해제</button></div><div class="transfer-classes" id="transferClasses"></div><p id="transferIgnored"></p><div class="transfer-students" id="transferStudents"></div><label class="transfer-ready"><input type="checkbox" id="transferReady">선택 영역의 채점이 완료되었음을 확인합니다. 기본값도 현재 환산점수로 반영됩니다.</label><div class="transfer-footer"><p id="transferSummary" style="font-weight:bold"></p><p id="transferStatus" role="status"></p><div class="transfer-actions" style="justify-content:flex-end"><button type="button" id="transferCancel">취소</button><button type="button" id="transferApply" class="transfer-primary" disabled>성취도에 반영하기</button></div></div></dialog>
+
 <script>
     let configData = [
         {
@@ -1143,7 +1141,7 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
                     : '';
 
                 tr1 += `<th colspan="${colCount + 2}" class="domain-th">
-                            ${escapeHtml(domain.domainTitle)} ${domainPasteBtn}<button type="button" class="transfer-header-btn" onclick="openAchievementTransfer(${dIdx})">성취도 반영</button><br>
+                            ${escapeHtml(domain.domainTitle)} ${domainPasteBtn}<br>
                             <span style="font-size:11px; font-weight:normal; color:#424242;">
                                 [${typeText}] 채점 ${domain.scoreType==='tier-percent'&&domain.classBaseEnabled?`반별 만점 (공통 ${domain.rawBaseScore})`:domain.rawBaseScore} ➡ 반영 ${domain.convertedBaseScore}
                             </span>
@@ -2452,196 +2450,6 @@ html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);m
     document.getElementById('appSidebar').addEventListener('keydown',event=>{if(event.key==='Escape'&&active>=0){event.preventDefault();const previous=active;show(-1);buttons[previous].focus();}});
     window.toggleSidebar=function(){show(-1)};
     show(-1);
-})();
-
-const TRANSFER_TARGET='mathkoni-achievement-target-v1';
-const trId=()=>globalThis.crypto?.randomUUID?.()||('id_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2));
-const trText=x=>String(x??'').trim();
-const trHas=x=>x!==undefined&&x!==null&&String(x)!=='';
-const trNum=x=>trHas(x)&&Number.isFinite(Number(x))?Number(x):NaN;
-function trStudentKey(no){
- const n=trText(no);
- if(!/^\d{4,5}$/.test(n)||Number(n[0])<1||Number(n.slice(1,-2))<1||Number(n.slice(-2))<1)return '';
- return n[0]+'-'+Number(n.slice(1,-2))+'-'+Number(n.slice(-2));
-}
-function trFresh(){
- const levels=[['A',90],['B',80],['C',70],['D',60],['E',0]].map(([name,min])=>({id:trId(),name,min:String(min)}));
- return {version:1,includeE:false,evals:[],levels,students:[],selected:'',ui:{tab:'overview',printTitle:'성취도 목표점수 안내',printLayout:'1',printScores:true}};
-}
-function trRead(raw){
- if(raw===null)return trFresh();
- const t=JSON.parse(raw);
- if(!t||t.version!==1||!Array.isArray(t.evals)||!Array.isArray(t.students)||!Array.isArray(t.levels)||!t.levels.length)throw Error('성취도 저장 자료를 읽을 수 없습니다. 성취도 계산기에서 전체 백업 또는 복원을 확인하세요.');
- for(const group of [t.evals,t.students,t.levels]){
-  if(group.some(x=>!x||typeof x.id!=='string'||!/^[\w-]{1,100}$/.test(x.id)||['__proto__','constructor','prototype'].includes(x.id))||new Set(group.map(x=>x.id)).size!==group.length)throw Error('성취도 저장 자료의 고유 ID에 오류가 있습니다.');
- }
- // Remove only the untouched factory sample, never a real assessment or score.
- const blank=t.students.every(s=>!trText(s.no)&&!trText(s.name)&&!Object.values(s.scores||{}).some(trHas));
- const sample=t.evals.length===3&&t.evals.every((x,i)=>trText(x.name)===['평가 1','평가 2','남은 평가'][i]&&Number(x.max)===100&&Number(x.weight)===[30,30,40][i]);
- if(blank&&sample)t.evals=[];
- t.students=t.students.filter(s=>trText(s.no)||trText(s.name)||Object.values(s.scores||{}).some(trHas));
- return t;
-}
-function trMerge(raw,plans,rows){
- const t=trRead(raw);
- if(!plans.length||!rows.length)throw Error('평가 영역과 학생을 각각 1개 이상 선택하세요.');
- const ids=new Set(), names=new Set();
- const dest=[];
- for(const p of plans){
-  const max=trNum(p.max), weight=trNum(p.weight), name=trText(p.name);
-  if(!name||!Number.isFinite(max)||max<=0)throw Error('평가명 및 환산 만점을 확인하세요.');
-  let ev;
-  if(p.target){
-   ev=t.evals.find(x=>x.id===p.target);
-   if(!ev||Number(ev.max)!==max)throw Error(name+': 성취도 계산기의 대상 평가 만점이 '+max+'점이어야 합니다.');
-  }else{
-   if(t.evals.some(x=>trText(x.name)===name)||names.has(name))throw Error(name+': 동일한 평가명이 있습니다. 기존 평가를 선택하세요.');
-   if(!Number.isFinite(weight)||weight<0||weight>100)throw Error(name+': 반영비율은 0~100%로 입력하세요.');
-   ev={id:trId(),name,max:String(max),weight:String(weight)};
-   t.evals.push(ev);
-  }
-  if(ids.has(ev.id))throw Error('여러 평가 영역을 같은 대상 평가에 반영할 수 없습니다.');
-  ids.add(ev.id);names.add(name);dest.push({ev,p});
- }
- const total=t.evals.reduce((sum,x)=>sum+trNum(x.weight),0);
- if(t.evals.some(x=>!Number.isFinite(trNum(x.weight))||trNum(x.weight)<0||trNum(x.weight)>100||!Number.isFinite(trNum(x.max))||trNum(x.max)<=0)||!Number.isFinite(total)||total>100+1e-8)throw Error('반영비율 합계가 100%를 초과하거나 평가 설정에 오류가 있습니다. 성취도 계산기의 기존 평가 설정 또는 새 평가 반영비율을 조정하세요.');
- const byNo=new Map(), seen=new Set();
- for(const s of t.students){const k=trStudentKey(s.no);if(k){if(byNo.has(k))throw Error('성취도 계산기에 중복 학번 '+s.no+'이 있습니다. 먼저 명단을 정리하세요.');byNo.set(k,s);}}
- let added=0, updated=0, overwrites=0;
- for(const row of rows){
-  const k=trStudentKey(row.no);
-  if(!k||!trText(row.name))throw Error('학생 학번 또는 이름이 올바르지 않습니다.');
-  if(seen.has(k))throw Error('수행평가 명단에 중복 학번 '+row.no+'이 있습니다. 먼저 정리하세요.');
-  seen.add(k);
-  let s=byNo.get(k);
-  if(s&&trText(s.name)&&trText(s.name)!==trText(row.name))throw Error('학번 '+row.no+'의 이름이 두 프로그램에서 다릅니다. 명단을 먼저 확인하세요.');
-  if(!s){s={id:trId(),no:row.no,name:row.name,scores:{},target:t.levels[0].id};t.students.push(s);byNo.set(k,s);added++}
-  else {if(!trText(s.name))s.name=row.name;updated++}
-  s.scores={...(s.scores||{})};
-  for(const {ev,p} of dest){
-   const v=row.scores[p.index];
-   if(!Number.isFinite(v)||v<0||v>Number(ev.max)+1e-8)throw Error(row.no+' '+row.name+' / '+p.name+': 환산점수가 0~'+ev.max+'점 범위를 벗어납니다.');
-   if(trHas(s.scores[ev.id])&&Number(s.scores[ev.id])!==v)overwrites++;
-   s.scores[ev.id]=String(v);
-  }
- }
- t.ui={...(t.ui||{}),tab:'overview'};
- if(!t.students.some(s=>s.id===t.selected))t.selected=t.students[0].id;
- t.savedAt=new Date().toISOString();
- return {data:t,added,updated,overwrites,total,count:rows.length,domains:plans.length};
-}
-
-
-(function(){
- const $t=id=>document.getElementById(id), dialog=$t('achievementTransferDialog');
- let snapshot=null,source=[],allRows=[],dest=[],targetRaw=null;
- function err(message){$t('transferStatus').textContent=message;$t('transferStatus').classList.add('transfer-error')}
- function status(message){$t('transferStatus').textContent=message;$t('transferStatus').classList.remove('transfer-error')}
- function node(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n}
- function checkbox(label,checked,cls){const l=node('label',undefined,cls),c=document.createElement('input');c.type='checkbox';c.checked=checked;l.append(c,document.createTextNode(' '+label));return {label:l,input:c}}
- function selectedRows(){return allRows.filter(r=>r.box.checked)}
- function updateClasses(){
-  for(const c of allRows.classes||[]){const n=c.rows.filter(r=>r.box.checked).length;c.box.checked=n===c.rows.length;c.box.indeterminate=n>0&&n<c.rows.length}
- }
- function selectedPlans(){
-  return source.filter(d=>d.box.checked).map(d=>({index:d.index,name:d.name,max:d.max,target:d.select.value,weight:d.weight.value}));
- }
- function preview(){
-  for(const d of source){const existing=dest.find(x=>x.id===d.select.value);d.weight.disabled=!!existing||!d.box.checked;d.select.disabled=!d.box.checked;if(existing)d.weight.value=String(existing.weight)}
-  updateClasses();
-  const plans=selectedPlans(),rows=selectedRows();
-  const weight=dest.reduce((s,e)=>s+Number(e.weight),0)+plans.filter(p=>!p.target).reduce((s,p)=>s+Number(p.weight),0);
-  $t('transferSummary').textContent=rows.length+'명 / '+plans.length+'개 평가 영역 · 반영 후 비율 합계 '+(Number.isFinite(weight)?fmtNum(weight,4)+'%':'확인 필요');
-  $t('transferApply').disabled=!plans.length||!rows.length||!$t('transferReady').checked;
-  if(weight>100+1e-8)err('반영비율 합계가 100%를 초과합니다. 새 영역의 반영비율 또는 연결 대상을 조정하세요.');
-  else status('선택한 학생과 평가 영역만 반영합니다. 기존 지필평가 등 다른 점수는 유지됩니다.');
- }
- function getSourceRows(){
-  const result=[],ignored=[];
-  for(const row of document.querySelectorAll('#tableBody tr')){
-   const no=trText(row.querySelector('.stu-id')?.value),name=trText(row.querySelector('.stu-name')?.value);
-   if(!no&&!name)continue;
-   const k=trStudentKey(no);
-   if(!k||!name){ignored.push(no||name);continue}
-   const values=configData.map((d,i)=>{const v=row.querySelector('.d'+i+'-conv')?.getAttribute('data-conv');return v===null||v===undefined||v===''?NaN:Number(v)});
-   const cls=getClassIdentity(no);
-   result.push({no,name,scores:values,cls:cls.key,label:cls.label});
-  }
-  return {result,ignored};
- }
- function open(index){
-  try{
-   if(dataRestoreInProgress)throw Error('자료를 불러오는 중입니다. 잠시 후 다시 시도하세요.');
-   if(evalSaveBlocked||localStorage.getItem('mathDiary_autoSaveData')!==evalSaveBaseline)throw Error('수행평가 자동저장이 차단된 상태입니다. 전체 백업 후 새로고침하세요.');
-   if(!window.applySettings()||!persistCurrentData())throw Error('평가 설정과 자동저장 상태를 먼저 확인하세요.');
-   const got=getSourceRows();if(!got.result.length)throw Error('유효한 학번과 이름이 있는 학생이 없습니다.');
-   targetRaw=localStorage.getItem(TRANSFER_TARGET);snapshot=trRead(targetRaw);dest=snapshot.evals;
-   source=configData.map((d,i)=>({index:i,name:trText(d.domainTitle),max:Number(d.convertedBaseScore),items:d.items})).filter(d=>d.items.length);
-   if(!source.length)throw Error('반영할 평가 영역이 없습니다.');
-   allRows=got.result;allRows.classes=[];
-   const domainRoot=$t('transferDomains'),classRoot=$t('transferClasses'),studentRoot=$t('transferStudents');domainRoot.replaceChildren();classRoot.replaceChildren();studentRoot.replaceChildren();
-   let available=Math.max(0,100-dest.reduce((s,e)=>s+Number(e.weight),0));
-   for(const d of source){
-    const row=node('div',undefined,'transfer-domain');
-    const ck=checkbox(d.name+' ('+fmtNum(d.max,4)+'점 만점)',Number.isInteger(index)&&index===d.index,'transfer-domain-name');d.box=ck.input;
-    const select=document.createElement('select');d.select=select;select.setAttribute('aria-label',d.name+' 연결 대상');
-    const opt=node('option','새 평가로 추가');opt.value='';select.append(opt);
-    for(const ev of dest){const o=node('option',ev.name+' ('+ev.max+'점 / '+ev.weight+'%)');o.value=ev.id;o.disabled=Number(ev.max)!==d.max;select.append(o)}
-    const matched=dest.filter(ev=>trText(ev.name)===d.name&&Number(ev.max)===d.max);
-    if(matched.length===1)select.value=matched[0].id;
-    const weight=document.createElement('input');weight.type='number';weight.min='0';weight.max='100';weight.step='any';weight.setAttribute('aria-label',d.name+' 반영비율');d.weight=weight;
-    const newWeight=Number.isFinite(d.max)&&d.max>0&&d.max<=available+1e-8?d.max:0;
-    d.newWeight=String(newWeight);if(!select.value)available-=newWeight;
-    weight.value=select.value?String(matched[0].weight):d.newWeight;
-    select.addEventListener('change',()=>{weight.value=select.value?String(dest.find(ev=>ev.id===select.value).weight):d.newWeight;preview()});
-    weight.addEventListener('input',()=>{d.newWeight=weight.value;preview()});
-    ck.input.addEventListener('change',preview);
-    const w=node('label',undefined,'transfer-weight');w.append(weight,document.createTextNode(' %'));
-    row.append(ck.label,select,w);domainRoot.append(row);
-   }
-   const groups=new Map();
-   for(const r of allRows){if(!groups.has(r.cls))groups.set(r.cls,{key:r.cls,label:r.label,rows:[]});groups.get(r.cls).rows.push(r)}
-   for(const g of Array.from(groups.values()).sort((a,b)=>a.key.localeCompare(b.key,'ko',{numeric:true}))){
-    const c=checkbox(g.label+' ('+g.rows.length+'명)',true,'transfer-class');g.box=c.input;allRows.classes.push(g);classRoot.append(c.label);
-    const group=node('div',undefined,'transfer-student-group');group.append(node('strong',g.label));
-    const grid=node('div',undefined,'transfer-student-grid');
-    for(const r of g.rows){const ck=checkbox(r.no+' '+r.name,true,'transfer-student');r.box=ck.input;ck.input.addEventListener('change',preview);grid.append(ck.label)}
-    group.append(grid);studentRoot.append(group);
-    c.input.addEventListener('change',()=>{for(const r of g.rows)r.box.checked=c.input.checked;preview()});
-   }
-   $t('transferIgnored').textContent=got.ignored.length?'학번 또는 이름이 올바르지 않은 '+got.ignored.length+'행은 제외했습니다.':'';
-   $t('transferReady').checked=false;
-   preview();dialog.showModal();
-  }catch(ex){alert('성취도 반영 준비 실패: '+ex.message)}
- }
- window.openAchievementTransfer=open;
- $t('transferAllDomains').onclick=()=>{source.forEach(d=>d.box.checked=true);preview()};
- $t('transferNoDomains').onclick=()=>{source.forEach(d=>d.box.checked=false);preview()};
- $t('transferAllStudents').onclick=()=>{allRows.forEach(r=>r.box.checked=true);preview()};
- $t('transferNoStudents').onclick=()=>{allRows.forEach(r=>r.box.checked=false);preview()};
- $t('transferReady').onchange=preview;
- $t('transferCancel').onclick=()=>dialog.close();
- $t('transferApply').onclick=()=>{
-  try{
-   if(!$t('transferReady').checked)throw Error('선택 영역의 채점 완료 여부를 확인하세요.');
-   if(localStorage.getItem(TRANSFER_TARGET)!==targetRaw)throw Error('성취도 자료가 다른 창에서 변경되었습니다. 창을 닫고 반영 메뉴를 다시 열어 주세요.');
-   const result=trMerge(targetRaw,selectedPlans(),selectedRows());
-   const zero=result.data.evals.filter(x=>Number(x.weight)===0).map(x=>x.name);
-   const summary=result.count+'명 · 평가 '+result.domains+'개\n신규 학생 '+result.added+'명 / 기존 학생 '+result.updated+'명\n기존 점수 변경 '+result.overwrites+'건\n반영비율 합계 '+fmtNum(result.total,4)+'%'+(zero.length?'\n0% 평가: '+zero.join(', ')+' (성취도에 반영되지 않으므로 평가 설정에서 비율 확인)':'');
-   if(!confirm(summary+'\n\n선택한 학번과 평가 점수를 반영할까요?'))return;
-   if(localStorage.getItem(TRANSFER_TARGET)!==targetRaw)throw Error('성취도 자료가 변경되었습니다. 반영 메뉴를 다시 열어 주세요.');
-   const encoded=JSON.stringify(result.data);
-   if(targetRaw!==null){localStorage.setItem(TRANSFER_TARGET+'-previous',targetRaw);localStorage.setItem(TRANSFER_TARGET+'-safety',targetRaw)}
-   localStorage.setItem(TRANSFER_TARGET,encoded);
-   if(localStorage.getItem(TRANSFER_TARGET)!==encoded)throw Error('저장 결과를 확인하지 못했습니다.');
-   dialog.close();
-   $t('transferLastStatus').textContent='성취도 반영 완료 · '+result.count+'명 / '+result.domains+'개 영역';
-   if(confirm('성취도 반영 완료: '+result.count+'명, '+result.domains+'개 영역.\n성취도 목표점수 화면으로 이동할까요?')){
-    try{if(window.parent!==window&&window.parent.location.origin===location.origin){window.parent.location.hash='#tool=/tools/achievement-target.html';return}}catch(_){}
-    location.href=new URL('achievement-target.html',location.href).href;
-   }
-  }catch(ex){err(ex.message)}
- };
 })();
 
 </script>

@@ -1,0 +1,50 @@
+---
+layout: null
+---
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>mathkoni | 교사 업무 지원 도구</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;font-family:system-ui,-apple-system,"Malgun Gothic",sans-serif;color:#152638;background:#f3f5f8}button,a,input{font:inherit}button,a{-webkit-tap-highlight-color:transparent}button{cursor:pointer}button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #6599db;outline-offset:3px}.app{height:100dvh;display:grid;grid-template-columns:252px minmax(0,1fr);grid-template-rows:60px minmax(0,1fr)}.top{grid-column:1/-1;background:#fff;border-bottom:1px solid #dce3eb;display:flex;align-items:center;gap:14px;padding:0 20px}.toggle,.utility{border:1px solid #d5dfe9;border-radius:8px;background:#fff;color:#344a60;padding:8px 12px;text-decoration:none;font-size:13px;font-weight:650;white-space:nowrap}.toggle:hover,.utility:hover{background:#edf3fb}.brand{font-weight:850;font-size:21px;letter-spacing:-.8px}.brand small{font-size:13px;color:#52657a;font-weight:550;letter-spacing:0;margin-left:12px}.top .right{margin-left:auto;display:flex;gap:8px;align-items:center}.side{background:#fff;border-right:1px solid #dce3eb;padding:16px 13px;overflow:auto;min-height:0}.side h2{font-size:12px;color:#65788d;letter-spacing:.02em;margin:14px 8px 8px}.search{width:100%;padding:10px;border:1px solid #d5dfe9;border-radius:8px;color:#24394f;background:#f8fafc;margin-bottom:8px}.menu{display:flex;flex-direction:column;gap:5px}.menu a{display:flex;align-items:center;gap:9px;padding:12px 10px;border-radius:8px;text-decoration:none;color:#33485d;font-weight:650;font-size:14px;overflow-wrap:anywhere}.menu a:hover{background:#f0f4f9}.menu a.active{background:#e5eefc;color:#174e97}.mark{width:24px;height:24px;border-radius:6px;background:#eaf0f8;display:grid;place-items:center;font-size:12px;flex:none}.side-note{margin:20px 8px 0;color:#697b8e;font-size:12px;line-height:1.6}.work{min-width:0;min-height:0;display:flex;flex-direction:column}.bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 16px;border-bottom:1px solid #dce3eb;background:#fff}.bar h1{font-size:15px;margin:0;overflow-wrap:anywhere}.bar .tools{display:flex;gap:7px;flex-shrink:0}.frame{flex:1;min-height:0;display:block;width:100%;border:0;background:#fff}.home{padding:clamp(20px,4vw,50px);overflow:auto;flex:1;min-height:0}.hero{max-width:1000px;margin:0 auto}.hero h1{font-size:clamp(24px,4vw,38px);letter-spacing:-1px;margin:0 0 10px}.hero p{color:#5b6d80;margin:0 0 24px;line-height:1.65}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px}.card{padding:24px;background:#fff;border:1px solid #dce3eb;border-radius:12px;text-decoration:none;color:#1b3553;display:block}.card:hover{border-color:#668dc2;background:#fafdff}.card strong{display:block;font-size:19px;margin:8px 0}.card span{font-size:13px;color:#5d7188}.notice{margin-top:24px!important;padding-top:18px;border-top:1px solid #dce3eb;font-size:13px}.app.collapsed{grid-template-columns:0 minmax(0,1fr)}.app.collapsed .side{display:none}[hidden]{display:none!important}@media(max-width:700px){.app{grid-template-columns:185px minmax(0,1fr)}.top{padding:0 10px;gap:8px}.brand{font-size:18px}.brand small{display:none}.top .right .utility{display:none}.side{padding:12px 8px}.menu a{font-size:13px;padding:10px 7px}.bar{padding:8px}.utility{padding:7px 9px}.bar h1{font-size:13px}.bar .tools{gap:4px}}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+<header class="top"><button class="toggle" id="toggle" type="button" aria-controls="sidebar" aria-expanded="true">☰ 메뉴 접기</button><div class="brand">mathkoni<small>교사 업무 지원 도구</small></div><div class="right"><a class="utility" href="#home">홈</a></div></header>
+<aside class="side" id="sidebar"><input class="search" id="search" type="search" placeholder="프로그램 검색" aria-label="프로그램 검색"><h2>업무 도구</h2><nav class="menu" id="menu" aria-label="프로그램 목록">
+<a href="#home" data-home><span class="mark">⌂</span><span>홈</span></a>
+{% assign tool_files = site.static_files | sort: "path" %}
+{% for file in tool_files %}
+{% assign prefix = file.path | slice: 0, 7 %}
+{% if prefix == '/tools/' and file.extname == '.html' %}
+{% assign title = file.basename | replace: '-', ' ' | replace: '_', ' ' %}
+{% assign description = '도구 실행' %}
+{% if file.basename == 'eval-manager' %}{% assign title = '수행평가 관리' %}{% assign description = '일괄 채점 · 반별 평균 · 개별 결과표' %}{% endif %}
+{% if file.basename == 'achievement-target' %}{% assign title = '성취도 목표점수' %}{% assign description = 'A·B·C·D 목표점수 계산 · 학생별 안내지' %}{% endif %}
+<a href="#tool={{ file.path | uri_escape }}" data-path="{{ file.path | escape }}" data-url="{{ file.path | relative_url | uri_escape | escape }}" data-description="{{ description | escape }}"><span class="mark">▤</span><span class="name">{{ title | escape }}</span></a>
+{% endif %}
+{% endfor %}
+</nav><p class="side-note">프로그램은 각자 독립적으로 실행됩니다. 학생 자료는 저장소에 올리지 말고 학교에서 승인한 환경에서 관리하세요.</p></aside>
+<main class="work"><div class="bar" id="bar" hidden><h1 id="heading"></h1><div class="tools"><a class="utility" id="openTab" target="_blank" rel="noopener">새 창</a><button class="utility" id="full" type="button">화면 확대</button></div></div>
+<section class="home" id="home"><div class="hero"><h1>교사 업무 지원 도구</h1><p>채점부터 성취도 분석까지. 필요한 프로그램을 선택해 작업을 시작하세요.</p><div class="cards" id="cards"></div><p class="notice">자동 저장은 브라우저 저장 공간에 의존합니다. 중요한 자료는 각 프로그램에서 전체 JSON 백업을 별도로 저장하세요. 기존 PC의 로컬 HTML에 저장된 자료는 자동으로 이전되지 않습니다.</p></div></section>
+<iframe class="frame" id="frame" title="업무 도구" allowfullscreen hidden></iframe></main>
+</div>
+<script>
+'use strict';
+const $=id=>document.getElementById(id), app=$('app'), links=Array.from($('menu').querySelectorAll('a[data-path]'));
+const storageKey='mathkoni-tools:sidebar';
+function sidebar(closed){app.classList.toggle('collapsed',closed);$('toggle').textContent=closed?'☰ 메뉴 펼치기':'☰ 메뉴 접기';$('toggle').setAttribute('aria-expanded',String(!closed));try{localStorage.setItem(storageKey,closed?'1':'0')}catch(_){}}
+let collapsed=window.innerWidth<=700;try{const saved=localStorage.getItem(storageKey);if(saved!==null)collapsed=saved==='1'}catch(_){}sidebar(collapsed);
+$('toggle').onclick=()=>sidebar(!app.classList.contains('collapsed'));
+function showCards(){const frag=document.createDocumentFragment();for(const link of links){const a=document.createElement('a');a.className='card';a.href=link.getAttribute('href');const icon=document.createElement('span');icon.textContent='업무 도구';const strong=document.createElement('strong');strong.textContent=link.querySelector('.name').textContent;const desc=document.createElement('span');desc.textContent=link.dataset.description;a.append(icon,strong,desc);frag.append(a)}$('cards').replaceChildren(frag);if(!links.length)$('cards').textContent='등록된 프로그램이 없습니다.'}
+showCards();
+function route(){let path='';try{if(location.hash.startsWith('#tool='))path=decodeURIComponent(location.hash.slice(6))}catch(_){}const link=links.find(x=>x.dataset.path===path);for(const l of links){l.classList.toggle('active',l===link);if(l===link)l.setAttribute('aria-current','page');else l.removeAttribute('aria-current')}$('menu').querySelector('[data-home]').classList.toggle('active',!link);$('home').hidden=!!link;$('bar').hidden=!link;$('frame').hidden=!link;if(link){const title=link.querySelector('.name').textContent;$('heading').textContent=title;$('frame').title=title;$('openTab').href=link.dataset.url;if($('frame').getAttribute('src')!==link.dataset.url)$('frame').src=link.dataset.url}else if($('frame').hasAttribute('src'))$('frame').removeAttribute('src')}
+window.addEventListener('hashchange',route);route();
+$('search').oninput=()=>{let q=$('search').value.trim().toLowerCase();for(const a of links)a.hidden=!!q&&!a.textContent.toLowerCase().includes(q)&&!a.dataset.description.toLowerCase().includes(q)};
+$('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if($('frame').requestFullscreen)await $('frame').requestFullscreen();else window.open($('openTab').href,'_blank','noopener')}catch(_){alert('화면 확대가 제한되어 있습니다. 새 창 버튼을 사용하세요.')}};
+</script>
+</body>
+</html>

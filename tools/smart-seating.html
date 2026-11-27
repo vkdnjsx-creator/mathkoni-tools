@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <title>자리 배치 프로그램</title>
 <style>
     body { font-family: 'Malgun Gothic', sans-serif; display: flex; margin: 0; height: 100vh; background-color: #80868b; overflow: hidden; }
@@ -580,6 +581,7 @@
             seatingSaveAlerted=false;return true;
         }catch(e){if(!seatingSaveAlerted){seatingSaveAlerted=true;showToast('자동저장 실패 · 현재 화면을 JSON으로 백업하세요.','error')}return false}
     }
+    const seatingEscape=value=>String(value??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     function seatingSafeRichText(value){
         const template=document.createElement('template');template.innerHTML=String(value??'');
         const allowed=new Set(['DIV','BR','P','B','STRONG','I','EM','U','SPAN','FONT']);
@@ -1377,12 +1379,12 @@
             const errName = (!student.name || student.name.trim() === '') ? 'error' : '';
 
             row.innerHTML = `
-                <input type="text" class="input-g" value="${student.grade}" title="학년" data-idx="${index}" data-key="grade">
-                <input type="text" class="input-c" value="${student.cls}" title="반" data-idx="${index}" data-key="cls">
-                <input type="text" class="input-n ${errNum}" value="${student.num}" title="번호" data-idx="${index}" data-key="num" placeholder="필수">
-                <input type="text" class="input-name ${errName}" value="${student.name}" title="이름" data-idx="${index}" data-key="name" placeholder="필수 입력">
-                <input type="text" class="input-gen" value="${student.gender || ''}" title="성별" data-idx="${index}" data-key="gender">
-                <input type="text" class="input-birth" value="${student.birthdate || ''}" title="생년월일" data-idx="${index}" data-key="birthdate">
+                <input type="text" class="input-g" value="${seatingEscape(student.grade)}" title="학년" data-idx="${index}" data-key="grade">
+                <input type="text" class="input-c" value="${seatingEscape(student.cls)}" title="반" data-idx="${index}" data-key="cls">
+                <input type="text" class="input-n ${errNum}" value="${seatingEscape(student.num)}" title="번호" data-idx="${index}" data-key="num" placeholder="필수">
+                <input type="text" class="input-name ${errName}" value="${seatingEscape(student.name)}" title="이름" data-idx="${index}" data-key="name" placeholder="필수 입력">
+                <input type="text" class="input-gen" value="${seatingEscape(student.gender || '')}" title="성별" data-idx="${index}" data-key="gender">
+                <input type="text" class="input-birth" value="${seatingEscape(student.birthdate || '')}" title="생년월일" data-idx="${index}" data-key="birthdate">
                 <button class="del-btn" data-idx="${index}" title="삭제">X</button>
             `;
             frag.appendChild(row);
@@ -1472,8 +1474,8 @@
             const infoText = getFormattedInfo(student, format);
             seatDiv.innerHTML = `
                 <div class="seat-pin ${student.isFixed ? 'fixed' : ''}" title="클릭 시 자리 고정">📌</div>
-                ${infoText ? `<div class="seat-info" style="font-size:${idSize};">${infoText}</div>` : ''}
-                <div class="seat-name" style="font-size:${nameSize};">${student.name}</div>
+                ${infoText ? `<div class="seat-info" style="font-size:${idSize};">${seatingEscape(infoText)}</div>` : ''}
+                <div class="seat-name" style="font-size:${nameSize};">${seatingEscape(student.name)}</div>
             `;
             
             const pinBtn = seatDiv.querySelector('.seat-pin');
@@ -1535,7 +1537,7 @@
     function cleanHTMLText(html) {
         if (!html) return "";
         let temp = document.createElement('div');
-        temp.innerHTML = html;
+        temp.innerHTML = seatingSafeRichText(html);
         return temp.innerText.replace(/\n/g, ' ').trim();
     }
 

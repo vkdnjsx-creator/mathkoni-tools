@@ -578,6 +578,23 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
     window.openTutorialModal = function() { document.getElementById('tutorialModal').style.display = 'flex'; };
     window.closeTutorialModal = function() { document.getElementById('tutorialModal').style.display = 'none'; };
 
+    // Sort whole rows, not individual cells, preserving all assessment data.
+    const studentIdCollator=new Intl.Collator('ko',{numeric:true,sensitivity:'base'});
+    function studentSortKey(value){
+        const id=String(value??'').trim();
+        if(!id)return {rank:2,id};
+        if(/^[1-9]\d{3,4}$/.test(id)){
+            const grade=Number(id[0]),cls=Number(id.slice(1,-2)),num=Number(id.slice(-2));
+            if(cls>0&&num>0)return {rank:0,id,grade,cls,num};
+        }
+        return {rank:1,id};
+    }
+    function compareStudentKeys(a,b){
+        if(a.rank!==b.rank)return a.rank-b.rank;
+        if(a.rank===0)return a.grade-b.grade||a.cls-b.cls||a.num-b.num;
+        if(a.rank===1)return studentIdCollator.compare(a.id,b.id);
+        return 0;
+    }
     function extractStudentDataFromDOM() {
         const rows = document.querySelectorAll('#tableBody tr');
         const students = [];
@@ -602,7 +619,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                 }
             });
         }
-        return students;
+        return students.sort((a,b)=>compareStudentKeys(studentSortKey(a.id),studentSortKey(b.id)));
     }
 
     // file:// 주소는 브라우저에 따라 파일 경로마다 별도 저장소를 사용할 수 있습니다.
@@ -974,6 +991,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
             const tbody = document.getElementById('tableBody');
             if (students.length) {
                 tbody.innerHTML = students.map((stu, i) => createRowHTML(i+1, stu.id, stu.name, stu.scores, stu.scoresById)).join('');
+                sortStudentRows();
                 tbody.querySelectorAll('tr').forEach(tr => calcRow(tr, true));
             }
             updateAverages();
@@ -1556,6 +1574,31 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
     // ==========================================
     // 5. 공통 기능 (명단 자동 인식 로드, 전체 엑셀 복사 등)
     // ==========================================
+    function sortStudentRows(){
+        const tbody=document.getElementById('tableBody');
+        const rows=Array.from(tbody.rows).filter(tr=>tr.querySelector('.stu-id'));
+        const ordered=rows.map(tr=>({tr,key:studentSortKey(tr.querySelector('.stu-id').value)})).sort((a,b)=>compareStudentKeys(a.key,b.key)).map(x=>x.tr);
+        const active=document.activeElement;
+        const selection=active?.matches('input[type="text"]')?[active.selectionStart,active.selectionEnd,active.selectionDirection]:null;
+        let moved=false;
+        // Move only rows out of order. Keep the original input elements and values.
+        for(let i=0;i<ordered.length;i++){
+            const tr=ordered[i];if(tbody.rows[i]!==tr){tbody.insertBefore(tr,tbody.rows[i]||null);moved=true;}
+            const cell=tr.querySelector('.sticky-col-1');if(cell?.firstChild&&cell.firstChild.textContent!==String(i+1))cell.firstChild.textContent=String(i+1);
+        }
+        if(moved&&active&&tbody.contains(active)&&document.activeElement!==active){
+            active.focus({preventScroll:true});if(selection&&selection[0]!==null)active.setSelectionRange(...selection);
+        }
+        return moved;
+    }
+    let studentSortTimer=0;
+    document.getElementById('tableBody').addEventListener('change',e=>{
+        if(!e.target.matches('.stu-id'))return;
+        // Wait for the field's focus transition, rather than moving rows while typing.
+        clearTimeout(studentSortTimer);
+        studentSortTimer=setTimeout(()=>{studentSortTimer=0;if(sortStudentRows())triggerAutoSave();},0);
+    });
+
     window.generateFromExcel = function(append = false) {
         const text = document.getElementById('excelInput').value.trim();
         if (!text) { alert("입력창에 엑셀 데이터를 붙여넣어 주세요."); return; }
@@ -1666,6 +1709,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
 
         if (append && existingCount > 0) tbody.insertAdjacentHTML('beforeend', htmlBuffer);
         else tbody.innerHTML = htmlBuffer;
+        sortStudentRows();
         document.querySelectorAll('#tableBody tr').forEach(tr => calcRow(tr, true));
         updateAverages();
     };
@@ -1679,6 +1723,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
         let html = '';
         for (let i=1; i<=n; i++) html += createRowHTML(start+i);
         tbody.insertAdjacentHTML('beforeend', html);
+        sortStudentRows();
         tbody.querySelectorAll('tr').forEach(tr => calcRow(tr, true));
         updateAverages();
     };
@@ -2283,6 +2328,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
             if (existingStudents.length) {
                 document.getElementById('tableBody').innerHTML = existingStudents.map((stu, i) =>
                     createRowHTML(i + 1, stu.id, stu.name, stu.scores)).join('');
+                sortStudentRows();
                 document.querySelectorAll('#tableBody tr').forEach(tr => calcRow(tr, true));
             } else {
                 document.getElementById('tableBody').innerHTML = `<tr><td id="emptyMsg" colspan="${getTotalColspan()}" style="padding:30px;color:#777;">학생 명단이 없습니다. 명단을 추가해주세요.</td></tr>`;
@@ -2297,6 +2343,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                 htmlBuffer += createRowHTML(i + 1, data.id, data.name, data.scores, data.scoresById); 
             });
             document.getElementById('tableBody').innerHTML = htmlBuffer;
+            sortStudentRows();
             document.querySelectorAll('#tableBody tr').forEach(tr => calcRow(tr, true));
             updateAverages();
         } else {

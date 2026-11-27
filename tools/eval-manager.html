@@ -3,6 +3,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>수학일기 일괄 평가 시스템 (최종 완성본 - mathkoni)</title>
 <style>
         body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; padding: 20px; background-color: #f0f2f5; margin: 0; position: relative; }
@@ -232,7 +233,32 @@ body.sidebar-collapsed .app-sidebar {display:none;}
         .class-base-table th {background:#f1f5f9;}
         .class-base-value {width:100px;max-width:100%;}
         .class-base-controls {display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+/* Portal workspace only; print and standalone styles stay unchanged. */
+@media screen {
+html.portal-embedded body{padding:0;background:#fff}
+html.portal-embedded .container{padding:10px 12px 14px;border-radius:0;box-shadow:none}
+html.portal-embedded .app-topbar{gap:10px;padding-bottom:8px;margin-bottom:10px}
+html.portal-embedded .app-topbar h2{font-size:18px}
+html.portal-embedded .sidebar-toggle{padding:6px 9px;font-size:12px}
+html.portal-embedded .app-layout{grid-template-columns:clamp(225px,18vw,280px) minmax(0,1fr);gap:12px}
+html.portal-embedded body.sidebar-collapsed .app-layout{grid-template-columns:minmax(0,1fr)}
+html.portal-embedded .app-sidebar{top:6px;max-height:calc(100vh - 66px);padding:9px}
+html.portal-embedded .side-title{padding:5px 6px 9px}
+html.portal-embedded .side-group{margin-top:7px}
+html.portal-embedded .side-group>summary{padding:10px}
+html.portal-embedded .side-body{padding:9px}
+html.portal-embedded .main-heading{display:none}
+html.portal-embedded .app-main .settings-panel{margin-bottom:8px}
+html.portal-embedded .app-main #settingsDetails>summary{padding:9px 12px}
+html.portal-embedded .app-main .ux-toolbar{margin-bottom:8px;padding:7px;gap:8px}
+html.portal-embedded .app-main .ux-toolbar .ux-search{max-width:none;flex:1;min-width:110px}
+html.portal-embedded .app-main .table-container{max-height:calc(100vh - 155px);min-height:240px}
+html.portal-embedded .app-main .bottom-btn-group{margin-top:8px}
+html.portal-embedded .watermark-web{font-size:15px;pointer-events:none}
+@media(max-width:760px){html.portal-embedded .container{padding:7px}html.portal-embedded .app-layout{grid-template-columns:minmax(0,1fr)}html.portal-embedded .app-sidebar{max-height:none;position:relative}html.portal-embedded .app-topbar h2{font-size:16px}html.portal-embedded .app-main .table-container{max-height:70vh;min-height:160px}}
+}
     </style>
+<script>if(window.self!==window.top)document.documentElement.classList.add('portal-embedded');</script>
 </head>
 <body>
 <div class="watermark-web">출처 mathkoni</div>

@@ -21,9 +21,9 @@ layout: null
 @media(max-width:700px){.top{flex-wrap:wrap;gap:5px;padding:6px 8px}.brand{font-size:18px}.right{margin-left:auto}.quick-switch{display:block}.menu{order:3;flex-basis:100%;padding:1px 0 3px}.menu a{padding:7px 9px;font-size:12px}.utility{padding:6px 8px}.tools{gap:4px}}
 @media(max-width:390px){.quick-switch{display:none}}
 
-.entry-screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px;background:#eef2f7}.entry-card{width:min(100%,420px);background:white;border:1px solid #dce3eb;border-radius:16px;padding:32px;box-shadow:0 12px 40px #1b355312}.entry-brand{font-size:25px;font-weight:850;letter-spacing:-.8px;color:#243e5b}.entry-card h1{font-size:21px;margin:18px 0 6px}.entry-card p{font-size:14px;color:#596c80;line-height:1.6;margin:0 0 20px}.entry-card label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.entry-card input{width:100%;border:1px solid #aebed1;border-radius:8px;padding:12px;font-size:16px}.entry-card button{width:100%;background:#2458a6;color:white;font-weight:750;border:0;border-radius:8px;padding:12px;margin-top:12px}.entry-card button:disabled{opacity:.65;cursor:wait}.entry-card #entryStatus{margin:12px 0 0;color:#a12626;min-height:20px;font-size:13px}.entry-card .entry-note{font-size:12px;color:#718096;margin:16px 0 0}.lock-btn{flex:none}
+.entry-screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px;background:#eef2f7}.entry-card{width:min(100%,420px);background:white;border:1px solid #dce3eb;border-radius:16px;padding:32px;box-shadow:0 12px 40px #1b355312}.entry-brand{font-size:25px;font-weight:850;letter-spacing:-.8px;color:#243e5b}.entry-card h1{font-size:21px;margin:18px 0 6px}.entry-card p{font-size:14px;color:#596c80;line-height:1.6;margin:0 0 20px}.entry-card label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.entry-card input{width:100%;border:1px solid #aebed1;border-radius:8px;padding:12px;font-size:16px}.entry-card button{width:100%;background:#2458a6;color:white;font-weight:750;border:0;border-radius:8px;padding:12px;margin-top:12px}.entry-card button:disabled{opacity:.65;cursor:wait}.entry-card #entryStatus{margin:12px 0 0;color:#a12626;min-height:20px;font-size:13px}.entry-card .entry-note{font-size:12px;color:#718096;margin:16px 0 0}.lock-btn{flex:none}.password-dialog{width:min(420px,calc(100% - 30px));padding:24px;border:1px solid #b8c8da;border-radius:12px;color:#152638}.password-dialog::backdrop{background:#132b4577}.password-dialog h2{margin:0 0 10px;font-size:20px}.password-dialog p{color:#596c80;font-size:13px;line-height:1.5}.password-dialog label{display:block;font-size:13px;font-weight:650;margin:12px 0 5px}.password-dialog input{width:100%;border:1px solid #b8c8da;border-radius:7px;padding:10px}.password-dialog footer{display:flex;justify-content:flex-end;gap:8px;margin-top:15px}.password-dialog .primary{background:#2458a6;color:white;border-color:#2458a6}.password-dialog #passwordStatus{color:#a12626;min-height:20px}
 </style>
-<script src="./assets/entry-lock.js?v=1"></script>
+<script src="./assets/entry-lock.js?v=2"></script>
 </head>
 <body>
 <section id="entryScreen" class="entry-screen"><div class="entry-card"><div class="entry-brand">mathkoni</div><h1>교사 업무 지원 도구</h1><p>이용 비밀번호를 입력해 주세요.</p><form id="entryForm"><label for="entryPassword">비밀번호</label><input id="entryPassword" type="password" required autocomplete="current-password" autofocus><button id="entrySubmit" type="submit">입장하기</button></form><p id="entryStatus" role="status" aria-live="polite"></p><p class="entry-note">비밀번호는 현재 접속 탭에서만 확인됩니다. 업무 종료 후 로그아웃하세요.</p><noscript>이 홈페이지는 JavaScript를 사용해야 합니다.</noscript></div></section>
@@ -44,14 +44,15 @@ layout: null
 {% if file.basename == 'hiedu-sms' %}{% assign title = '문자발송 스마트입력' %}{% assign description = '연락처 관리 · 대상자 선택 · 엑셀 다운로드' %}{% endif %}
 {% if file.basename == 'merit-entry' %}{% assign title = '상벌점 단체입력' %}{% assign description = '개인 PC 명단 등록 · 상벌점 일괄 입력' %}{% endif %}
 {% if file.basename == 'data-manager' %}{% assign title = '통합 데이터 관리' %}{% assign description = '개인 브라우저 자료 전체 백업 · 선택 복원' %}{% endif %}
-<a href="#tool={{ file.path | uri_escape }}" data-path="{{ file.path | escape }}" data-url="{{ file.path | relative_url | uri_escape | escape }}{% if file.basename == 'merit-entry' or file.basename == 'data-manager' %}?v=20261127-entry1{% else %}?v=20261127-entry1{% endif %}" data-description="{{ description | escape }}"><span class="mark">▤</span><span class="name">{{ title | escape }}</span></a>
+<a href="#tool={{ file.path | uri_escape }}" data-path="{{ file.path | escape }}" data-url="{{ file.path | relative_url | uri_escape | escape }}{% if file.basename == 'merit-entry' or file.basename == 'data-manager' %}?v=20261127-entry2{% else %}?v=20261127-entry2{% endif %}" data-description="{{ description | escape }}"><span class="mark">▤</span><span class="name">{{ title | escape }}</span></a>
 {% endif %}
 {% endfor %}
-</nav><div class="right"><button class="utility lock-btn" id="entryLogout" type="button">로그아웃</button><select id="quickSwitch" class="quick-switch" aria-label="프로그램 바로 전환"><option value="">홈</option></select><div class="bar" id="bar" hidden><h1 id="heading"></h1><div class="tools"><a class="utility" id="openTab" target="_blank" rel="noopener">새 창</a><button class="utility" id="full" type="button">화면 확대</button></div></div></div></header>
+</nav><div class="right"><button class="utility lock-btn" id="entryChange" type="button">비밀번호 변경</button><button class="utility lock-btn" id="entryLogout" type="button">로그아웃</button><select id="quickSwitch" class="quick-switch" aria-label="프로그램 바로 전환"><option value="">홈</option></select><div class="bar" id="bar" hidden><h1 id="heading"></h1><div class="tools"><a class="utility" id="openTab" target="_blank" rel="noopener">새 창</a><button class="utility" id="full" type="button">화면 확대</button></div></div></div></header>
 <main class="work">
 <section class="home" id="home"><div class="hero"><h1>교사 업무 지원 도구</h1><p>필요한 프로그램을 선택해 작업을 시작하세요. 입력 자료는 사용 중인 브라우저에만 저장되며 서버로 전송되지 않습니다.</p><input class="search" id="search" type="search" placeholder="프로그램 검색" aria-label="프로그램 검색"><div class="cards" id="cards"></div><p id="noResults" hidden>검색 결과가 없습니다.</p><p class="notice">학생 명단·연락처·성적을 GitHub에 업로드하지 마세요. 다른 PC와 자료가 자동 공유되지 않습니다. 같은 브라우저 프로필을 공유하면 자료에 접근할 수 있으므로 개인 OS 계정 또는 브라우저 프로필을 사용하세요. 브라우저 데이터 삭제에 대비해 통합 데이터 관리에서 주기적으로 JSON 백업을 보관하세요. 기존 로컬 HTML의 자료는 자동 이전되지 않습니다.</p></div></section>
 <iframe class="frame" id="frame" title="업무 도구" allowfullscreen hidden></iframe></main>
 </div>
+<dialog id="passwordDialog" class="password-dialog"><h2>비밀번호 변경</h2><p>새 비밀번호는 이 브라우저 프로필에만 적용됩니다. 다른 PC와 브라우저의 공용 초기 비밀번호는 변경되지 않습니다.</p><form id="passwordForm"><label for="oldPassword">현재 비밀번호</label><input id="oldPassword" type="password" autocomplete="current-password" required><label for="newPassword">새 비밀번호 (8자 이상)</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required><label for="confirmPassword">새 비밀번호 확인</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" maxlength="128" required><p id="passwordStatus" role="status" aria-live="polite"></p><footer><button type="button" class="utility" id="passwordCancel">취소</button><button type="submit" class="utility primary" id="passwordSave">변경하기</button></footer></form></dialog>
 <script>
 'use strict';
 const $=id=>document.getElementById(id), app=$('app'), links=Array.from($('menu').querySelectorAll('a[data-path]'));
@@ -77,6 +78,19 @@ $('entryForm').onsubmit=async e=>{
  }catch(err){$('entryStatus').textContent='입장할 수 없습니다. HTTPS 연결 및 브라우저 저장 설정을 확인해 주세요.'}
  finally{verifying=false;$('entrySubmit').disabled=false}
 };
+$('entryChange').onclick=()=>{if(!window.mathkoniEntry?.allowed()){showEntry();return}$('passwordForm').reset();$('passwordStatus').textContent='';$('passwordDialog').showModal();$('oldPassword').focus()};
+$('passwordCancel').onclick=()=>$('passwordDialog').close();
+$('passwordDialog').addEventListener('close',()=>$('passwordForm').reset());
+let changing=false;
+$('passwordForm').onsubmit=async e=>{e.preventDefault();if(changing)return;const old=$('oldPassword').value,next=$('newPassword').value;
+ if(next!==$('confirmPassword').value){$('passwordStatus').textContent='새 비밀번호 확인이 일치하지 않습니다.';return}
+ changing=true;$('passwordSave').disabled=true;$('passwordCancel').disabled=true;
+ try{if(!await mathkoniEntry.changePassword(old,next))throw Error('비밀번호는 변경되었으나 세션 갱신에 실패했습니다. 새 비밀번호로 다시 로그인하세요.');
+ $('passwordDialog').close();alert('이 브라우저의 비밀번호가 변경되었습니다. 다른 탭의 이전 로그인은 만료됩니다.');
+ }catch(err){$('passwordStatus').textContent=err.message;if(!mathkoniEntry.allowed()){ $('passwordDialog').close();showEntry();$('entryStatus').textContent='다시 로그인해 주세요.'}}
+ finally{changing=false;$('passwordSave').disabled=false;$('passwordCancel').disabled=false}
+};
+window.addEventListener('storage',e=>{if(e.key===window.mathkoniEntry?.PREF&&!mathkoniEntry.allowed()){if($('passwordDialog').open)$('passwordDialog').close();showEntry();$('entryStatus').textContent='비밀번호 설정이 변경되었습니다. 다시 로그인하세요.'}});
 $('entryLogout').onclick=()=>{if(!confirm('현재 탭에서 로그아웃할까요? 자동저장 자료는 유지됩니다.'))return;showEntry();try{mathkoniEntry.lock()}catch(_){}location.reload()};
 window.addEventListener('hashchange',route);window.addEventListener('pageshow',()=>{if(!window.mathkoniEntry?.allowed())showEntry()});enter();
 $('search').oninput=()=>{let q=$('search').value.trim().toLowerCase(),count=0;for(const a of $('cards').querySelectorAll('.card')){a.hidden=!!q&&!a.textContent.toLowerCase().includes(q);if(!a.hidden)count++}$('noResults').hidden=count>0||!links.length};

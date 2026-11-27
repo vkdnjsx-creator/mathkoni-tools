@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hiedu용 문자발송 연락처 엑셀화</title>
     <!-- 엑셀 다운로드를 위한 SheetJS 라이브러리 -->
@@ -234,7 +235,7 @@
         const byId=new Map(dbData.filter(x=>contactId(x)).map(x=>[contactId(x),x])), seen=new Set();
         for(const st of incoming){const id=contactId(st);if(seen.has(id)||byId.has(id)&&byId.get(id).name!==st.name)return alert('중복 학번 또는 이름 불일치가 있습니다. 기존 자료를 확인하세요.');seen.add(id)}
         for(const st of incoming){const old=byId.get(contactId(st));if(old)Object.assign(old,st);else dbData.push(st)}
-        saveContacts(DBKEY,dbData);renderDbData();el.value='';toggleDbBatchInput();alert(incoming.length+'건 추가 또는 갱신');
+        const saved=saveContacts(DBKEY,dbData);renderDbData();el.value='';toggleDbBatchInput();alert(incoming.length+'건 추가 또는 갱신'+(saved?'':' · 자동 저장 실패, JSON 백업 필요'));
     }
 
     function updateDbData(index, field, value) {

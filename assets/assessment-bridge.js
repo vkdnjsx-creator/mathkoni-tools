@@ -15,32 +15,34 @@ function mergeRecords(old,incoming){
  let added=0,updated=0;for(const r of incoming){const k=rowkey(r),o=rows.get(k);if(!o)added++;else if(o.score!==r.score||o.name!==r.name||o.max!==r.max)updated++;rows.set(k,r)}
  return {rows:[...rows.values()],added,updated};
 }
-function syncModel(target,oldRows,newRows){
+function syncModel(target,oldRows,newRows,options={}){
  checkRows(oldRows);checkRows(newRows);
  if(!target||!target.sourceScope||!Array.isArray(target.evals)||!Array.isArray(target.students)||!Array.isArray(target.levels)||!target.levels.length)return {changed:false,count:0,data:target};
  const t=JSON.parse(JSON.stringify(target)),prior=new Map(oldRows.filter(r=>scope(r)===t.sourceScope).map(r=>[rowkey(r),r])),next=new Map(newRows.filter(r=>scope(r)===t.sourceScope).map(r=>[rowkey(r),r]));
  const by=new Map();for(const st of t.students){const no=studentNo(st.no);if(!no){if(norm(st.no)||norm(st.name))throw Error('성취도 명단에 올바르지 않은 학번이 있습니다.');continue}if(by.has(no))throw Error('성취도 중복 학번: '+no);by.set(no,st)}
- let count=0,added=0;
+ const touched=new Set(options.touched||[]);let count=0,added=0,metadata=0;
  for(const e of t.evals){
   if(!e.sourceKey||e.liveSync===false)continue;
   const configured=Array.isArray(e.linkedClasses),classes=new Set(configured?e.linkedClasses:[...by.keys()].map(classOf));
   const matches=[...next.values()].filter(r=>area(r)===e.sourceKey&&classes.has(r.cls));
   for(const r of matches){
+   const k=rowkey(r),prev=prior.get(k);
+   if(!options.full&&!touched.has(k)&&prev&&prev.score===r.score&&prev.max===r.max&&norm(prev.name)===norm(r.name))continue;
    if(Number(e.max)!==r.max)throw Error(e.name+' 만점 불일치 · 성취도 반영 설정을 확인하세요.');
    const no=noOf(r);let st=by.get(no);
    if(!st){if(!configured)continue;st={id:g.crypto?.randomUUID?.()||('s'+Date.now().toString(36)+Math.random().toString(36).slice(2)),no,name:r.name,target:t.levels[0].id,scores:Object.fromEntries(t.evals.map(x=>[x.id,'']))};t.students.push(st);by.set(no,st);added++}
    if(norm(st.name)&&norm(st.name)!==norm(r.name))throw Error(no+' 성취도 학생 이름 불일치');
-   if(!norm(st.name))st.name=r.name;
+   if(!norm(st.name)){st.name=r.name;metadata++;}
    st.scores=st.scores||{};const value=r.score===null?'':String(r.score);if(String(st.scores[e.id]??'')!==value){st.scores[e.id]=value;count++}
   }
   // A deliberate removal in the integrated source clears that linked score only.
   for(const [k,r] of prior){if(area(r)!==e.sourceKey||!classes.has(r.cls)||next.has(k))continue;const st=by.get(noOf(r));if(st&&norm(st.name)===norm(r.name)&&String(st.scores?.[e.id]??'')!==''){st.scores[e.id]='';count++}}
  }
- if(count||added){t.students=t.students.filter(s=>norm(s.no)||norm(s.name)||Object.values(s.scores||{}).some(v=>v!=null&&String(v)!==''));t.students.sort((a,b)=>studentNo(a.no).localeCompare(studentNo(b.no),'ko',{numeric:true}));if(!t.students.some(s=>s.id===t.selected))t.selected=t.students[0]?.id||'';t.savedAt=new Date().toISOString();}
- return {data:t,changed:!!(count||added),count,added};
+ if(count||added||metadata){t.students=t.students.filter(s=>norm(s.no)||norm(s.name)||Object.values(s.scores||{}).some(v=>v!=null&&String(v)!==''));t.students.sort((a,b)=>studentNo(a.no).localeCompare(studentNo(b.no),'ko',{numeric:true}));if(!t.students.some(s=>s.id===t.selected))t.selected=t.students[0]?.id||'';t.savedAt=new Date().toISOString();}
+ return {data:t,changed:!!(count||added||metadata),count,added};
 }
-function sync(oldRows,newRows){
- const raw=localStorage.getItem(TARGET);if(raw===null)return {changed:false,count:0,added:0};const result=syncModel(JSON.parse(raw),oldRows,newRows);if(!result.changed)return result;
+function sync(oldRows,newRows,options={}){
+ const raw=localStorage.getItem(TARGET);if(raw===null)return {changed:false,count:0,added:0};const result=syncModel(JSON.parse(raw),oldRows,newRows,options);if(!result.changed)return result;
  if(localStorage.getItem(TARGET)!==raw)throw Error('성취도 자료가 다른 창에서 변경되었습니다.');
  localStorage.setItem(TARGET+'-previous',raw);
  if(localStorage.getItem(TARGET)!==raw)throw Error('성취도 자료 변경 감지');
@@ -50,7 +52,7 @@ function publish(incoming,expected){
  const raw=localStorage.getItem(SOURCE);if(raw!==expected)throw Error('통합관리 자료가 다른 창에서 변경되었습니다. 다시 열어 주세요.');
  const old=raw===null?[]:checkRows(JSON.parse(raw));const result=mergeRecords(old,incoming),next=JSON.stringify(result.rows);
  if(raw!==next){if(raw!==null)localStorage.setItem(SOURCE+'-previous',raw);if(localStorage.getItem(SOURCE)!==raw)throw Error('통합관리 자료 변경 감지');localStorage.setItem(SOURCE,next);if(localStorage.getItem(SOURCE)!==next)throw Error('통합관리 저장 확인 실패');}
- try{result.sync=sync(old,result.rows)}catch(e){result.syncError=e.message}
+ try{result.sync=sync(old,result.rows,{touched:incoming.map(rowkey)})}catch(e){result.syncError=e.message}
  return result;
 }
 g.mathkoniBridge={SOURCE,TARGET,scope,area,rowkey,studentNo,noOf,classOf,checkRows,mergeRecords,syncModel,sync,publish};

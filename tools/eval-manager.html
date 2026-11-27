@@ -4,6 +4,21 @@
 <head>
 <meta charset="utf-8"/>
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<script src="../assets/entry-lock.js?v=1"></script>
+<script>
+(function(){
+ if(location.protocol==='file:')return;
+ function check(){
+  if(window.mathkoniEntry){window.mathkoniEntry.requireTool();return}
+  document.documentElement.style.visibility='hidden';
+  const url=new URL('../',location.href);
+  url.hash='tool='+encodeURIComponent('/tools/'+location.pathname.split('/').pop());
+  location.replace(url.href);
+ }
+ check();window.addEventListener('pageshow',check);
+})();
+</script>
+
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>수학일기 일괄 평가 시스템 (최종 완성본 - mathkoni)</title>
 <style>

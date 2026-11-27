@@ -5,6 +5,7 @@ layout: null
 <html lang="ko">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; frame-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>mathkoni | 교사 업무 지원 도구</title>
 <style>
@@ -35,12 +36,15 @@ layout: null
 {% if file.basename == 'achievement-target' %}{% assign title = '성취도 목표점수' %}{% assign description = 'A·B·C·D 목표점수 계산 · 학생별 안내지' %}{% endif %}
 {% if file.basename == 'smart-seating' %}{% assign title = '스마트 자리배치' %}{% assign description = '자리 배치 · 학생 명단 · 출석부 · A4 인쇄' %}{% endif %}
 {% if file.basename == 'activity-rewards' %}{% assign title = '활동수학 점수·상점' %}{% assign description = '활동 점수 누계 · 반별 상점 지급 · 엑셀 내보내기' %}{% endif %}
+{% if file.basename == 'hiedu-sms' %}{% assign title = '문자발송 스마트입력' %}{% assign description = '연락처 관리 · 대상자 선택 · 엑셀 다운로드' %}{% endif %}
+{% if file.basename == 'merit-entry' %}{% assign title = '상벌점 단체입력' %}{% assign description = '개인 PC 명단 등록 · 상벌점 일괄 입력' %}{% endif %}
+{% if file.basename == 'data-manager' %}{% assign title = '통합 데이터 관리' %}{% assign description = '개인 브라우저 자료 전체 백업 · 선택 복원' %}{% endif %}
 <a href="#tool={{ file.path | uri_escape }}" data-path="{{ file.path | escape }}" data-url="{{ file.path | relative_url | uri_escape | escape }}" data-description="{{ description | escape }}"><span class="mark">▤</span><span class="name">{{ title | escape }}</span></a>
 {% endif %}
 {% endfor %}
 </nav><div class="right"><select id="quickSwitch" class="quick-switch" aria-label="프로그램 바로 전환"><option value="">홈</option></select><div class="bar" id="bar" hidden><h1 id="heading"></h1><div class="tools"><a class="utility" id="openTab" target="_blank" rel="noopener">새 창</a><button class="utility" id="full" type="button">화면 확대</button></div></div></div></header>
 <main class="work">
-<section class="home" id="home"><div class="hero"><h1>교사 업무 지원 도구</h1><p>채점부터 성취도 분석까지. 필요한 프로그램을 선택해 작업을 시작하세요.</p><input class="search" id="search" type="search" placeholder="프로그램 검색" aria-label="프로그램 검색"><div class="cards" id="cards"></div><p id="noResults" hidden>검색 결과가 없습니다.</p><p class="notice">학생 명단과 성적은 GitHub 저장소에 업로드하지 마세요. 자동 저장은 브라우저 저장 공간에 의존합니다. 중요한 자료는 각 프로그램에서 전체 JSON 백업을 별도로 저장하세요. 기존 PC의 로컬 HTML에 저장된 자료는 자동으로 이전되지 않습니다.</p></div></section>
+<section class="home" id="home"><div class="hero"><h1>교사 업무 지원 도구</h1><p>필요한 프로그램을 선택해 작업을 시작하세요. 입력 자료는 사용 중인 브라우저에만 저장되며 서버로 전송되지 않습니다.</p><input class="search" id="search" type="search" placeholder="프로그램 검색" aria-label="프로그램 검색"><div class="cards" id="cards"></div><p id="noResults" hidden>검색 결과가 없습니다.</p><p class="notice">학생 명단·연락처·성적을 GitHub에 업로드하지 마세요. 다른 PC와 자료가 자동 공유되지 않습니다. 같은 브라우저 프로필을 공유하면 자료에 접근할 수 있으므로 개인 OS 계정 또는 브라우저 프로필을 사용하세요. 브라우저 데이터 삭제에 대비해 통합 데이터 관리에서 주기적으로 JSON 백업을 보관하세요. 기존 로컬 HTML의 자료는 자동 이전되지 않습니다.</p></div></section>
 <iframe class="frame" id="frame" title="업무 도구" allowfullscreen hidden></iframe></main>
 </div>
 <script>

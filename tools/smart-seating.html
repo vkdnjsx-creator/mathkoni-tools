@@ -1,0 +1,1982 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>자리 배치 프로그램</title>
+<style>
+    body { font-family: 'Malgun Gothic', sans-serif; display: flex; margin: 0; height: 100vh; background-color: #80868b; overflow: hidden; }
+    
+    /* 우측 상단 출처 워터마크 */
+    #mathkoni-watermark {
+        position: fixed; top: 15px; right: 20px; font-size: 13px; color: rgba(0, 0, 0, 0.4); 
+        font-weight: bold; z-index: 9999; letter-spacing: 1px;
+        cursor: pointer; pointer-events: auto; user-select: none;
+    }
+    #mathkoni-watermark:hover { color: rgba(0, 0, 0, 0.8); }
+
+    /* 화면 확대/축소 컨트롤 바 */
+    #zoom-controls {
+        position: fixed; top: 15px; right: 150px; background: rgba(255,255,255,0.95);
+        padding: 5px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        display: flex; align-items: center; gap: 8px; z-index: 9990; user-select: none;
+    }
+    #zoom-controls button {
+        background: none; color: #333; margin: 0; padding: 2px 6px; box-shadow: none; font-size: 14px; border: none; cursor: pointer; transition: 0.1s;
+    }
+    #zoom-controls button:hover { background: #e9ecef; border-radius: 5px; }
+    #zoom-controls button:active { transform: scale(0.9); }
+    #zoom-controls span { font-size: 13px; font-weight: bold; width: 45px; text-align: center; color: #007bff; cursor: pointer; }
+    #zoom-controls span:hover { text-decoration: underline; }
+
+    /* 부드러운 토스트 알림창 */
+    #toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+    .toast { background: rgba(0,0,0,0.8); color: white; padding: 12px 20px; border-radius: 8px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); animation: fadeInOut 2.5s forwards; }
+    @keyframes fadeInOut { 0% {opacity:0; transform:translateY(20px);} 10% {opacity:1; transform:translateY(0);} 90% {opacity:1; transform:translateY(0);} 100% {opacity:0; transform:translateY(-20px);} }
+
+    /* 사이드바 스타일 */
+    #sidebar { 
+        width: 440px; min-width: 350px; max-width: 800px; 
+        padding: 15px; background: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.2); 
+        z-index: 10; height: 100vh; box-sizing: border-box; 
+        resize: horizontal; overflow-x: hidden; overflow-y: auto; display: block;
+        scroll-behavior: smooth;
+    }
+    
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    #sidebar h2 { font-size: 18px; margin: 0; }
+    
+    /* 아코디언(접기/펴기) 및 가이드 스타일 */
+    .accordion-group { margin-bottom: 8px; border: 1px solid #ced4da; border-radius: 5px; background: #f8f9fa; overflow: hidden; }
+    .accordion-header { display: flex; justify-content: space-between; align-items: center; background: #e9ecef; padding: 10px 12px; cursor: pointer; font-size: 14px; font-weight: bold; user-select: none; color: #333; transition: background 0.2s; }
+    .accordion-header:hover { background: #dee2e6; }
+    .accordion-content { padding: 12px; background: #fff; border-top: 1px solid #ced4da; }
+    .toggle-icon { font-size: 12px; color: #666; }
+    
+    .info-guide {
+        background: #f1f3f5; padding: 10px; border-radius: 4px; font-size: 11px; color: #495057;
+        margin-bottom: 12px; border-left: 3px solid #007bff; line-height: 1.5;
+    }
+    .info-guide b { color: #212529; }
+
+    textarea { width: 100%; height: 90px; resize: none; margin-bottom: 10px; box-sizing: border-box; padding: 10px; font-size: 12px; line-height: 1.4; border-radius: 4px; border: 1px solid #ccc; }
+    
+    label.setting-label { font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 5px; margin-top: 10px; }
+    label.setting-label:first-child { margin-top: 0; }
+    select.setting-select, input[type="range"] { width: 100%; padding: 6px; font-size: 13px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; margin-bottom: 5px; }
+
+    .arrange-btn-group { display: flex; gap: 5px; margin-bottom: 5px; }
+    .arrange-btn-group button { flex: 1; padding: 6px; font-size: 11px; background: #6f42c1; margin-bottom: 0; }
+    .arrange-btn-group button:hover { background: #59339d; }
+
+    button { padding: 8px; margin-bottom: 8px; border: none; background: #007bff; color: white; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.15s ease-in-out; }
+    button:hover { background: #0056b3; }
+    button:active { transform: scale(0.98); }
+    .btn-danger { background: #dc3545; }
+    .btn-danger:hover { background: #c82333; }
+    .btn-success { background: #28a745; }
+    .btn-success:hover { background: #218838; }
+    .btn-warning { background: #ffc107; color: #212529; }
+    .btn-warning:hover { background: #e0a800; }
+    .full-width-btn { width: 100%; margin-bottom: 5px; }
+
+    #closeSidebarBtn { background: #6c757d; padding: 5px 10px; margin: 0; font-size: 12px; }
+    #openSidebarBtn { display: none; position: fixed; left: 20px; top: 20px; z-index: 100; box-shadow: 0 4px 6px rgba(0,0,0,0.3); background: #343a40; padding: 10px 15px; font-size: 14px; color: white; border: none; border-radius: 5px; cursor: pointer; }
+
+    .student-row { display: flex; gap: 4px; margin-bottom: 5px; align-items: center; }
+    .student-row input { padding: 4px; border: 1px solid #ccc; border-radius: 3px; font-size: 11px; text-align: center; box-sizing: border-box; transition: border 0.2s, background-color 0.2s; }
+    .student-row input:focus { border-color: #007bff; outline: none; background-color: #f8faff; }
+    .student-row input.error { border-color: #dc3545; background-color: #fff3f3; } 
+    
+    .input-g, .input-c { width: 25px; }
+    .input-n { width: 30px; }
+    .input-name { flex-grow: 1; min-width: 50px; text-align: left !important; }
+    .input-gen { width: 35px; }
+    .input-birth { width: 75px; }
+    .del-btn { width: 28px; padding: 4px; margin: 0; background: #dc3545; font-size: 11px; }
+    
+    #main { flex-grow: 1; position: relative; overflow: auto; background-color: #80868b; display: flex; justify-content: center; align-items: flex-start; padding-top: 50px; }
+    #board-wrapper { min-width: 1300px; min-height: 900px; display: flex; justify-content: center; align-items: flex-start; box-sizing: border-box; }
+
+    #a4-board { 
+        width: 1123px; height: 794px; background: #ffffff; 
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3); position: relative; box-sizing: border-box; overflow: hidden; 
+        transition: background-color 0.3s; transform-origin: top center;
+    }
+
+    #a4-board.edit-mode {
+        background-color: #fcfcfc;
+        background-image: linear-gradient(to right, #e0e0e0 1px, transparent 1px), linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+        background-size: 20px 20px; box-shadow: 0 0 0 4px #28a745, 0 10px 20px rgba(0,0,0,0.3);
+    }
+    #a4-board.edit-mode::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 4px dotted rgba(0, 0, 0, 0.35); transform: translateX(-50%); pointer-events: none; z-index: 5; }
+    #a4-board.edit-mode::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; border-top: 4px dotted rgba(0, 0, 0, 0.35); transform: translateY(-50%); pointer-events: none; z-index: 5; }
+    
+    #seating-grid { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; }
+    
+    #arrange-anchor { position: absolute; width: 0; height: 0; z-index: 900; display: none; }
+    #a4-board.edit-mode #arrange-anchor { display: block; }
+    .anchor-dot { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; background: #dc3545; border-radius: 50%; border: 2px solid #fff; cursor: move; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    .anchor-label { position: absolute; background: #dc3545; color: white; padding: 3px 8px; font-size: 11px; font-weight: bold; border-radius: 4px; white-space: nowrap; pointer-events: none; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+    #arrange-anchor.dir-top-left .anchor-label { left: 12px; top: -10px; right: auto; bottom: auto; }
+    #arrange-anchor.dir-bottom-right .anchor-label { right: 12px; bottom: 12px; left: auto; top: auto; }
+
+    .seat { 
+        position: absolute; background: #f8f9fa; border: 2px solid #ccc; border-radius: 8px; 
+        display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; 
+        user-select: none; transition: box-shadow 0.2s, transform 0.1s, border-color 0.2s, background-color 0.2s; cursor: pointer;
+    }
+    .layout-column { flex-direction: column; }
+    .layout-row { flex-direction: row; gap: 8px; }
+    #a4-board.edit-mode .seat { cursor: move; }
+    #a4-board.edit-mode .seat:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-color: #007bff; z-index: 50; }
+    
+    @keyframes pulseSelect {
+        0% { box-shadow: 0 0 0 0 rgba(255, 112, 67, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(255, 112, 67, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 112, 67, 0); }
+    }
+    .seat.selected { border: 3px solid #ff7043 !important; background-color: #ffebee; animation: pulseSelect 1.5s infinite; z-index: 9999 !important; transform: scale(1.05); }
+
+    .seat-info { color: #111; font-weight: bold; pointer-events: none; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
+    .layout-column .seat-info { margin-bottom: 2px; }
+    .seat-name { color: #111; font-weight: bold; pointer-events: none; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%; }
+    
+    .seat-pin { position: absolute; top: 2px; right: 2px; width: 20px; height: 20px; font-size: 14px; cursor: pointer; transition: 0.2s; z-index: 10; opacity: 0.2; user-select: none; display: flex; align-items: center; justify-content: center; }
+    .seat-pin:hover { opacity: 0.6; transform: scale(1.2); }
+    .seat-pin.fixed { opacity: 1; transform: scale(1.1); filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.3)); }
+
+    /* 박스 및 표 래퍼 공통 */
+    .custom-box, .custom-table-wrapper { position: absolute; background-color: var(--bg-color, #ffffff); box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; flex-direction: column; z-index: 10; transition: background-color 0.2s; }
+    .custom-box { resize: both; overflow: auto; }
+    .custom-table-wrapper { resize: both; overflow: hidden; }
+    
+    .box-bordered { border: 2px solid #444; }
+    .box-borderless { border: 2px solid transparent; box-shadow: none !important; background-color: transparent !important; }
+    
+    .box-tools { position: absolute; top: 0; left: 0; right: 0; height: 24px; background: rgba(0,0,0,0.75); display: none; justify-content: space-between; align-items: center; padding: 0 5px; cursor: move; z-index: 20; border-radius: 2px 2px 0 0; }
+    .custom-box:hover .box-tools, .custom-table-wrapper:hover .box-tools { display: flex; }
+    
+    .box-tools span { color: white; font-size: 11px; pointer-events: none; font-weight: bold; }
+    .box-btn-group { display: flex; gap: 3px; }
+    .box-tools button { background: transparent; border: 1px solid rgba(255,255,255,0.5); color: white; border-radius: 3px; font-size: 10px; padding: 2px 4px; margin: 0; cursor: pointer; }
+    .box-tools button:hover { background: #fff; color: #000; border-color: #fff; }
+    .box-tools .btn-del-box { border-color: #ff6b6b; color: #ff6b6b; font-weight: bold; }
+    .box-tools .btn-del-box:hover { background: #ff6b6b; color: #fff; border-color: #ff6b6b; }
+    
+    .custom-box-content { 
+        width: 100%; height: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: center; 
+        flex-direction: column; outline: none; font-weight: bold; text-align: center; padding: 10px; pointer-events: auto; 
+        word-break: break-all; overflow-wrap: break-word; overflow-y: auto; 
+    }
+
+    .attendance-table { width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; }
+    .attendance-table th, .attendance-table td { border: 1px solid #333; vertical-align: middle; padding: 4px; outline: none; word-wrap: break-word; color: #111; overflow: hidden; }
+    .attendance-table th { background-color: #e9ecef; font-weight: bold; text-align: center; }
+    
+    #bottom-controls { position: fixed; bottom: 30px; left: 0; width: 100%; display: flex; justify-content: center; pointer-events: none; z-index: 100; gap: 15px; }
+    #undoBtn { background: #6c757d; border-radius: 30px; padding: 15px 30px; font-size: 16px; box-shadow: 0 6px 15px rgba(0,0,0,0.3); pointer-events: auto; transition: transform 0.1s; border: none; color: white; cursor: pointer; font-weight: bold; }
+    #undoBtn:active { transform: scale(0.95); }
+    #undoBtn:hover { background: #5a6268; }
+    
+    #bottomShuffleBtn { pointer-events: auto; padding: 15px 50px; font-size: 18px; border-radius: 30px; box-shadow: 0 6px 15px rgba(0,0,0,0.3); background: #28a745; transition: transform 0.1s; border: none; color: white; cursor: pointer; font-weight: bold; }
+    #bottomShuffleBtn:active { transform: scale(0.95); }
+    #bottomShuffleBtn:hover { background: #218838; }
+
+    /* ========== 1페이지 딱 맞춤 인쇄(Print) 전용 스타일 ========== */
+    @media print {
+        @page { size: A4 landscape; margin: 0; }
+        
+        html, body { width: 100%; height: 100%; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background-color: #fff !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+        #sidebar, #openSidebarBtn, #bottom-controls, #mathkoni-watermark, #zoom-controls, .box-tools, .seat-pin, #arrange-anchor, #toast-container { display: none !important; }
+        #main { position: absolute; top: 0; left: 0; right: 0; bottom: 0; margin: 0 !important; padding: 0 !important; overflow: hidden !important; background-color: #fff !important; }
+        #board-wrapper { padding: 0 !important; margin: 0 !important; min-width: 0 !important; min-height: 0 !important; width: 100%; height: 100%; display: flex !important; justify-content: center !important; align-items: center !important; }
+        
+        /* 인쇄 시 줌 완벽 초기화 */
+        #a4-board { box-shadow: none !important; margin: 0 !important; transform: scale(0.96) !important; transform-origin: center center !important; page-break-inside: avoid; }
+        #a4-board.edit-mode { background-image: none !important; border: none !important; box-shadow: none !important; }
+        #a4-board.edit-mode::before, #a4-board.edit-mode::after { display: none !important; }
+        .seat { border: 2px solid #333 !important; box-shadow: none !important; }
+        .attendance-table th, .attendance-table td { border: 1px solid #333 !important; }
+        .custom-box { box-shadow: none !important; }
+        .box-bordered { border: 2px solid #333 !important; }
+        
+        .custom-box-content::-webkit-scrollbar { display: none; }
+        .custom-box-content { -ms-overflow-style: none; scrollbar-width: none; overflow: hidden !important; }
+    }
+</style>
+</head>
+<body>
+
+<!-- 워터마크 동적 생성 스크립트 실행 위치 -->
+<div id="watermark-container"><div id="mathkoni-watermark" title="빠르게 5번 클릭하여 기능 활성화">출처: mathkoni</div></div>
+
+<!-- 줌 컨트롤 바 -->
+<div id="zoom-controls">
+    <button id="zoomOutBtn" title="축소">➖</button>
+    <span id="zoomVal" title="클릭 시 100%로 초기화">100%</span>
+    <button id="zoomInBtn" title="확대">➕</button>
+</div>
+
+<!-- 알림(Toast) 컨테이너 -->
+<div id="toast-container"></div>
+
+<button id="openSidebarBtn">▶ 명단 펼치기</button>
+
+<div id="sidebar">
+    <div class="sidebar-header">
+        <h2>설정 및 명단</h2>
+        <button id="closeSidebarBtn">◀ 접기</button>
+    </div>
+    
+    <!-- 1. 게시용, 교탁용 설정 -->
+    <div class="accordion-group">
+        <div class="accordion-header" onclick="toggleSection(this)">
+            <span style="color: #0d47a1;">📑 게시용, 교탁용 설정</span>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <div class="info-guide">
+                • <b>단축키</b>: <kbd>Ctrl</kbd> + <kbd>S</kbd> (백업 저장) / <kbd>Ctrl</kbd> + <kbd>P</kbd> (인쇄)<br>
+                • <b>배치1(게시용)</b>: 칠판 앞에 띄워두는 기본 학생 화면<br>
+                • <b>배치2(교탁용)</b>: 교탁에서 보는 상하/좌우 반전된 화면
+            </div>
+
+            <div id="layoutTabs" style="display:flex; gap:5px; margin-bottom: 5px; flex-wrap: wrap;"></div>
+            
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <button id="flipCopyBtn" class="btn-warning" style="flex:2; font-size:11px; margin-bottom:0; background-color:#ff9800;">배치1 ➔ 배치2 상하반전 복사</button>
+                <button id="printBtn" class="btn-success" style="flex:1; font-size:11px; margin-bottom:0; background-color:#17a2b8;" title="단축키: Ctrl + P">🖨️️ 인쇄하기</button>
+            </div>
+            
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <button id="hideSecretBtn" class="btn-warning" style="display:none; flex:1; font-size:11px; margin-bottom:0; background-color:#6c757d; color:white; border:none;" title="학생들에게 보이지 않게 배치3 탭을 숨깁니다.">배치3(비밀) 탭 숨기기</button>
+            </div>
+
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <button id="flipCurrentHorizontalBtn" class="btn-warning" style="flex:1; font-size:11px; margin-bottom:0; background-color:#fd7e14; color:white; border:none;" title="현재 탭(배치2)의 학생 자리만 좌우로 반전시킵니다.">현재 탭(배치2) 학생 좌우반전</button>
+                <button id="deleteLayoutBtn" class="btn-danger" style="flex:1; font-size:11px; margin-bottom:0;" title="배치2의 학생 자리만 삭제하고 텍스트 박스/출석부는 유지">배치2 학생자리만 삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 자리 배치 및 자동 정렬 -->
+    <div class="accordion-group">
+        <div class="accordion-header" onclick="toggleSection(this)">
+            <span style="color: #155724;">🛠 자리 배치 및 자동 정렬</span>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <div class="info-guide">
+                • <b>수동 배치 켜기</b>: <b>학생 자리</b>와 <b>기준점</b> 이동 가능<br>
+                • <b>방향키 이동</b>: 자리 클릭(선택) 후 방향키로 미세 이동 가능<br>
+                <span style="color:#007bff;">※ 텍스트 박스, 표는 언제나 드래그 및 크기 조절이 가능합니다.</span>
+            </div>
+
+            <button id="toggleEditModeBtn" class="btn-success full-width-btn" style="margin-bottom: 5px;">수동 배치 켜기 (현재 잠김 🔒)</button>
+            <button id="addBoxBtn" class="full-width-btn" style="background:#17a2b8; margin-bottom: 10px;">+ 텍스트 박스(교탁 등) 추가</button>
+            <button id="unpinAllBtn" class="btn-danger full-width-btn" style="margin-bottom: 10px; background:#e83e8c;">📌 모든 자리 고정(핀) 해제</button>
+            
+            <label for="snapUnitSelect" class="setting-label" style="margin-top:0;">학생/기준점 스냅(그리드) 단위</label>
+            <select id="snapUnitSelect" class="setting-select" style="margin-bottom: 10px;">
+                <option value="2">2px (매우 세밀하게)</option>
+                <option value="3">3px (세밀하게)</option>
+                <option value="5" selected="">5px (보통)</option>
+                <option value="10">10px (넓게)</option>
+            </select>
+
+            <label class="setting-label" style="margin-top:0;">자리 자동 정렬 (A4 기준)</label>
+            <div class="arrange-btn-group">
+                <button id="arrangeSingle5Btn">5분단</button>
+                <button id="arrangeSingle6Btn">6분단</button>
+                <button id="arrangePairBtn">짝꿍(3분단)</button>
+                <button id="arrangeGroupBtn">4명 모둠</button>
+            </div>
+            
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">자리 너비 (<span id="seatWVal">115</span>px)</label>
+                    <input type="range" id="seatWSlider" min="50" max="200" value="110">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">자리 높이 (<span id="seatHVal">59</span>px)</label>
+                    <input type="range" id="seatHSlider" min="30" max="150" value="65">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">좌우 간격 (<span id="gapXVal">11</span>px)</label>
+                    <input type="range" id="gapXSlider" min="10" max="150" value="50">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">앞뒤 간격 (<span id="gapYVal">16</span>px)</label>
+                    <input type="range" id="gapYSlider" min="10" max="150" value="40">
+                </div>
+            </div>
+
+            <label for="arrangeDirection" class="setting-label">정렬 시작 및 방향</label>
+            <select id="arrangeDirection" class="setting-select">
+                <option value="top-left">좌측 상단 시작 (위 ➔ 아래 배치)</option>
+                <option value="bottom-right">우측 하단 시작 (아래 ➔ 위 배치)</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- 3. 출석부 설정 -->
+    <div class="accordion-group">
+        <div class="accordion-header" onclick="toggleSection(this)">
+            <span style="color: #6f42c1;">📊 출석부 설정</span>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <div class="info-guide">
+                • <b>실시간 연동</b>: 학생 명단 수정 시 출석부에 즉각 반영<br>
+                • <b>완전 편집</b>: 표 상단 툴바에서 텍스트 정렬 방향 변경 가능
+            </div>
+
+            <div style="display:flex; gap:5px; margin-bottom: 5px;">
+                <button id="addTableBtn" class="btn-success" style="flex:2; background:#6f42c1; color:white; margin-bottom:0;">+ 출석부 표 추가</button>
+                <button id="deleteAllTablesBtn" class="btn-danger" style="flex:1; margin-bottom:0;">표 모두 삭제</button>
+            </div>
+
+            <label for="birthdateFormatSelect" class="setting-label" style="margin-top:10px;">생일 표시 방식</label>
+            <select id="birthdateFormatSelect" class="setting-select">
+                <option value="full4">생년 4자리 포함 (예: 2010.05.01)</option>
+                <option value="full2">생년 2자리 포함 (예: 10.05.01)</option>
+                <option value="short" selected="">월/일만 표시 (예: 05.01)</option>
+                <option value="none">표시 안 함</option>
+            </select>
+            
+            <div style="display:flex; gap:10px; margin-top:5px;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">표 전체 너비 (<span id="tableWidthDisplay">150px</span>px)</label>
+                    <input type="range" id="tableWidthSlider" min="150" max="1000" value="300">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">표 전체 높이 (<span id="tableHeightDisplay">723px</span>px)</label>
+                    <input type="range" id="tableHeightSlider" min="100" max="1500" value="400">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:5px; margin-top:5px;">
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">1열 비율(<span id="col1WidthDisplay">5</span>%)</label>
+                    <input type="range" id="col1WidthSlider" min="5" max="80" value="20">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">2열 비율(<span id="col2WidthDisplay">23</span>%)</label>
+                    <input type="range" id="col2WidthSlider" min="10" max="90" value="60">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:11px; display:block; margin-bottom:3px;">3열 비율(<span id="col3WidthDisplay">5</span>%)</label>
+                    <input type="range" id="col3WidthSlider" min="5" max="80" value="20">
+                </div>
+            </div>
+            
+            <label for="tableHeaderFontSizeSlider" class="setting-label" style="margin-top:10px;">
+                <span>표 열 항목(헤더) 크기</span><span id="tableHeaderFontSizeDisplay">10px</span>
+            </label>
+            <input type="range" id="tableHeaderFontSizeSlider" min="8" max="30" value="14">
+            
+            <label for="tableContentFontSizeSlider" class="setting-label">
+                <span>표 내용 글자 크기</span><span id="tableContentFontSizeDisplay">10px</span>
+            </label>
+            <input type="range" id="tableContentFontSizeSlider" min="8" max="30" value="12">
+        </div>
+    </div>
+
+    <!-- 4. 자리 표기 방식 설정 -->
+    <div class="accordion-group">
+        <div class="accordion-header" onclick="toggleSection(this)">
+            <span>📝 자리 표기 방식 설정</span>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-content" style="display: block;">
+            <div class="info-guide">
+                • <b>표기 내용</b>: 자리에 표시할 학번/이름 등 자유 설정<br>
+                • <b>텍스트 방향</b>: 글자를 상하 또는 좌우로 나열
+            </div>
+
+            <label for="displayFormat" class="setting-label">자리 표기 내용</label>
+            <select id="displayFormat" class="setting-select">
+                <option value="default">학년-반-번호 (예: 1학년 2반 3번)</option>
+                <option value="hakbun4">학번 형태 4자리 (예: 1203)</option>
+                <option value="hakbun5">학번 형태 5자리 (예: 10203)</option>
+                <option value="num_name">번호만 (예: 3.)</option>
+                <option value="name_only">이름만 표기</option>
+            </select>
+
+            <label for="textDirection" class="setting-label">텍스트 배치 방향</label>
+            <select id="textDirection" class="setting-select">
+                <option value="column">위아래 (기본)</option>
+                <option value="row">일렬 (가로 나열)</option>
+            </select>
+
+            <label for="idFontSizeSlider" class="setting-label">
+                <span>학번 표기 크기</span><span id="idFontSizeDisplay">16px</span>
+            </label>
+            <input type="range" id="idFontSizeSlider" min="8" max="24" value="12">
+            
+            <label for="nameFontSizeSlider" class="setting-label">
+                <span>이름 표기 크기</span><span id="nameFontSizeDisplay">18px</span>
+            </label>
+            <input type="range" id="nameFontSizeSlider" min="10" max="36" value="16">
+        </div>
+    </div>
+
+    <!-- 5. 학생 명단 관리 -->
+    <div class="accordion-group">
+        <div class="accordion-header" onclick="toggleSection(this)">
+            <span>👥 학생 명단 관리</span>
+            <span class="toggle-icon">▼</span>
+        </div>
+        <div class="accordion-content">
+            <div class="info-guide">
+                • <b>스마트 인식</b>: 940120, 94-01-20 등 엑셀 붙여넣기 시 날짜 자동 변환<br>
+                • <b>단축키 탑재</b>: 방향키(↑, ↓) 또는 Enter키로 엑셀처럼 자유로운 이동
+            </div>
+            
+            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                <button id="exportDataBtn" class="btn-warning" style="flex:1; font-size:11px; margin-bottom:0; background-color:#17a2b8; color:white;" title="단축키: Ctrl + S">💾 데이터 백업</button>
+                <input type="file" id="importDataInput" style="display:none;" accept=".json">
+                <button id="importDataBtn" class="btn-success" style="flex:1; font-size:11px; margin-bottom:0; background-color:#28a745;">📂 데이터 복원</button>
+            </div>
+            
+            <!-- 실시간 동기화 버튼 -->
+            <div style="display:flex; gap:5px; margin-bottom:10px;">
+                <button id="syncFileBtn" class="btn-success" style="flex:1; font-size:11px; margin-bottom:0; background-color:#6f42c1;" title="선택한 로컬 파일에 변경사항을 묻지 않고 실시간으로 계속 자동 저장합니다.">💻 PC 실시간 자동저장 연결</button>
+            </div>
+
+            <textarea id="excelInput" placeholder="엑셀 복사 붙여넣기 또는 직접 입력
+[형식1] 학년/반/번호/이름/성별/생년월일
+[형식2] 학번/이름 (예: 10203 홍길동)"></textarea>
+            <button id="parseBtn" class="full-width-btn">엑셀 데이터 일괄 적용</button>
+
+            <!-- 강력한 편의 버튼 추가 -->
+            <div style="display: flex; gap: 5px; margin-bottom: 5px;">
+                <button id="autoNumBtn" class="btn-warning" style="flex: 1; font-size:11px; margin-bottom:0; background:#fd7e14; color:white;">🔢 번호 일괄 부여</button>
+                <button id="copyListBtn" class="btn-success" style="flex: 1; font-size:11px; margin-bottom:0; background:#6c757d;">📋 엑셀로 내보내기</button>
+            </div>
+
+            <!-- 명단 헤더 표기 및 정렬 버튼 -->
+            <div style="display: flex; gap: 4px; margin-top: 15px; margin-bottom: 5px; padding-bottom: 5px; border-bottom: 2px solid #eee; font-size: 11px; font-weight: bold; text-align: center; color: #555; align-items: flex-end;">
+                <div style="width: 25px;">학년</div>
+                <div style="width: 25px;">반</div>
+                <div style="width: 30px;">
+                    번호<br>
+                    <button id="sortNumBtn" style="padding: 2px 4px; font-size: 9px; margin-top:2px; background: #6c757d; color: white; border: none; border-radius: 3px; cursor: pointer;" title="번호순 오름차순 정렬">⬇️</button>
+                </div>
+                <div style="flex-grow: 1; min-width: 50px; text-align: left; padding-left: 4px;">이름</div>
+                <div style="width: 35px;">성별</div>
+                <div style="width: 75px;">생년월일</div>
+                <div style="width: 28px;"></div>
+            </div>
+
+            <!-- 명단 렌더링 -->
+            <div id="student-list-container" style="margin-top: 0; border-top: none; padding-top: 0;"></div>
+            
+            <div style="display: flex; gap: 5px;">
+                <button id="addStudentBtn" class="btn-success" style="flex: 1;">+ 1명 추가</button>
+                <button id="resetBtn" class="btn-danger" style="flex: 1;">현재 탭 명단 초기화</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="main">
+    <div id="board-wrapper">
+        <div id="a4-board">
+            <div id="arrange-anchor" class="dir-top-left" style="left: 240px; top: 190px;">
+                <div class="anchor-dot"></div>
+                <div class="anchor-label">✥ 기준점 (좌상단 시작, ↘방향)</div>
+            </div>
+            
+            <div id="seating-grid"></div>
+        </div>
+    </div>
+</div>
+
+<div id="bottom-controls">
+    <button id="undoBtn" title="이전 작업으로 되돌리기 (단축키: Ctrl + Z)">↩️ 되돌리기</button>
+    <button id="bottomShuffleBtn" title="고정(📌)된 학생을 제외한 나머지 인원만 랜덤으로 자리가 바뀝니다." style="display: block;">🔄 고정 제외 랜덤 섞기</button>
+</div>
+
+<script>
+    // === 원본 소스 보호(보안) 로직 ===
+    const s_key = String.fromCharCode(109, 97, 116, 104, 107, 111, 110, 105); 
+    const s_display = String.fromCharCode(52636, 52376, 58) + " " + s_key; 
+    
+    let wmNode = document.getElementById("mathkoni-watermark");
+    if (!wmNode) {
+        wmNode = document.createElement("div");
+        wmNode.id = "mathkoni-watermark";
+        wmNode.title = "빠르게 5번 클릭하여 기능 활성화";
+        document.getElementById("watermark-container").appendChild(wmNode);
+    }
+    wmNode.innerText = s_display;
+
+    setInterval(() => {
+        const el = document.getElementById("mathkoni-watermark");
+        if (!el || !el.innerText.includes(s_key)) {
+            document.body.innerHTML = `
+                <div style="width:100%; height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8d7da; color:#721c24; font-family:sans-serif; text-align:center;">
+                    <h1 style="font-size:32px; font-weight:bold; margin-bottom:20px;">[오류] 프로그램 원본 코드가 훼손되었습니다.</h1>
+                    <p style="font-size:18px;">출처 표기가 무단으로 삭제되거나 변경되었습니다.<br>정상적인 사용을 위해 원본 파일을 다시 다운로드하여 실행해 주십시오.</p>
+                </div>`;
+        }
+    }, 3000);
+
+    let highestZIndex = 100;
+    function bringToFront(element) {
+        highestZIndex++;
+        element.style.zIndex = highestZIndex;
+    }
+
+    function showToast(message, type = 'info') {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerText = message;
+        if(type === 'error') toast.style.backgroundColor = '#dc3545';
+        else if(type === 'success') toast.style.backgroundColor = '#28a745';
+        
+        container.appendChild(toast);
+        setTimeout(() => {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 2500);
+    }
+
+    let currentZoom = 1.0;
+    const a4Board = document.getElementById('a4-board');
+    const zoomValDisplay = document.getElementById('zoomVal');
+    
+    document.getElementById('zoomInBtn').addEventListener('click', () => {
+        currentZoom = Math.min(2.0, currentZoom + 0.1);
+        updateZoom();
+    });
+    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+        currentZoom = Math.max(0.5, currentZoom - 0.1);
+        updateZoom();
+    });
+    zoomValDisplay.addEventListener('click', () => {
+        currentZoom = 1.0; 
+        updateZoom();
+    });
+    function updateZoom() {
+        a4Board.style.transform = `scale(${currentZoom})`;
+        zoomValDisplay.innerText = Math.round(currentZoom * 100) + '%';
+    }
+
+    let historyStack = [];
+    let saveDebounceTimer; 
+    let localFileHandle = null; 
+
+    document.getElementById('exportDataBtn').addEventListener('click', () => {
+        saveData(true); 
+        const dataStr = localStorage.getItem('seatingData');
+        if(!dataStr) return showToast("저장된 데이터가 없습니다.", "error");
+        const blob = new Blob([dataStr], {type: "application/json"});
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        const dateStr = new Date().toISOString().slice(0,10);
+        link.download = `자리배치_백업_${dateStr}.json`;
+        link.click();
+        showToast("데이터 백업 파일이 다운로드되었습니다.", "success");
+    });
+
+    document.getElementById('importDataBtn').addEventListener('click', () => {
+        document.getElementById('importDataInput').click();
+    });
+
+    document.getElementById('importDataInput').addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+            try {
+                const data = JSON.parse(evt.target.result);
+                applyData(data, false);
+                showToast("데이터를 성공적으로 불러왔습니다.", "success");
+            } catch(err) {
+                showToast("올바른 백업 파일이 아닙니다.", "error");
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = ''; 
+    });
+
+    // === PC 실시간 자동저장 로직 (File System Access API) ===
+    document.getElementById('syncFileBtn').addEventListener('click', async () => {
+        try {
+            if (!window.showSaveFilePicker) {
+                return showToast("현재 사용 중인 브라우저는 실시간 PC 저장 기능을 지원하지 않습니다. (크롬/엣지 권장)", "error");
+            }
+            localFileHandle = await window.showSaveFilePicker({
+                suggestedName: `자리배치_실시간저장.json`,
+                types: [{ description: 'JSON 파일', accept: {'application/json': ['.json']} }]
+            });
+            showToast("PC 파일 실시간 자동저장이 연결되었습니다! 이제부터 묻지 않고 해당 파일에 자동 덮어쓰기 됩니다.", "success");
+            document.getElementById('syncFileBtn').innerText = '✅ 실시간 PC 저장 연동 중...';
+            document.getElementById('syncFileBtn').style.backgroundColor = '#20c997';
+            saveData(true); // 즉시 1회 저장
+        } catch (error) {
+            if (error.name !== 'AbortError') showToast("파일 연결 중 오류가 발생했습니다.", "error");
+        }
+    });
+
+    async function saveToLocalFileSystem(dataStr) {
+        if (!localFileHandle) return;
+        try {
+            const writable = await localFileHandle.createWritable();
+            await writable.write(dataStr);
+            await writable.close();
+        } catch (error) {
+            console.error("PC 실시간 저장 실패:", error);
+            localFileHandle = null;
+            document.getElementById('syncFileBtn').innerText = '🔄 PC 실시간 저장 연결';
+            document.getElementById('syncFileBtn').style.backgroundColor = '#6f42c1';
+            showToast("PC 파일 접근 권한이 만료되었습니다. 다시 연결해주세요.", "error");
+        }
+    }
+
+    let mathkoniClicks = 0;
+    let mathkoniTimer;
+    document.getElementById('mathkoni-watermark').addEventListener('click', () => {
+        mathkoniClicks++;
+        clearTimeout(mathkoniTimer);
+        if (mathkoniClicks >= 5) {
+            mathkoniClicks = 0;
+            let answer = prompt("멋진 디자인이네요! 배포하기전 출처가 누굴까요?\n\n[확인]을 누르면 배포용 html을 다운 받을 수 있습니다.\n[취소]를 누르면 선생님이 원하는 자리를 설정할 수 있습니다.");
+            if (answer === s_key) {
+                exportToHtml();
+            } else if (answer === null) {
+                activateSecretLayout(); 
+            } else {
+                showToast("정답이 아닙니다. (힌트: 워터마크를 확인하세요)", "error");
+            }
+        } else {
+            mathkoniTimer = setTimeout(() => { mathkoniClicks = 0; }, 600);
+        }
+    });
+
+    function exportToHtml() {
+        if(confirm("배포용 HTML 템플릿을 다운로드하시겠습니까?\n(현재 추가된 텍스트 박스, 표 등 환경 설정은 저장되지만, 학생 명단은 개인정보 보호를 위해 비워진 상태로 다운로드됩니다.)")) {
+            let clone = document.documentElement.cloneNode(true);
+            let grid = clone.querySelector('#seating-grid');
+            if(grid) grid.innerHTML = '';
+            let list = clone.querySelector('#student-list-container');
+            if(list) list.innerHTML = '';
+            
+            clone.querySelectorAll('.custom-box').forEach(e => e.remove());
+            clone.querySelectorAll('.custom-table-wrapper').forEach(e => e.remove());
+            
+            let exportData = JSON.parse(localStorage.getItem('seatingData') || '{}');
+            if(exportData.layouts) {
+                exportData.layouts.forEach(l => {
+                    l.students = [];
+                    if(l.attendanceTables) {
+                        l.attendanceTables.forEach(t => {
+                            if(t.data && t.data.length > 0) t.data = [t.data[0]]; 
+                        });
+                    }
+                });
+            }
+            
+            let oldPreload = clone.querySelector('#preload-data');
+            if(oldPreload) oldPreload.remove();
+            
+            let script = clone.ownerDocument.createElement('script');
+            script.id = 'preload-data';
+            script.type = 'application/json';
+            script.textContent = JSON.stringify(exportData);
+            clone.querySelector('body').appendChild(script);
+            
+            let finalHtml = "<!DOCTYPE html>\n<html lang=\"ko\">\n" + clone.innerHTML + "\n</html>";
+            let blob = new Blob([finalHtml], {type: "text/html;charset=utf-8"});
+            let link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = "자리배치_템플릿.html";
+            link.click();
+            showToast("템플릿 다운로드가 완료되었습니다.", "success");
+        }
+    }
+
+    function activateSecretLayout() {
+        layouts[2] = {
+            id: 'layout_3', name: '배치3(비밀)',
+            students: JSON.parse(JSON.stringify(layouts[0].students)),
+            customBoxes: JSON.parse(JSON.stringify(layouts[0].customBoxes)),
+            attendanceTables: JSON.parse(JSON.stringify(layouts[0].attendanceTables)),
+            isHidden: false
+        };
+        switchLayout(2);
+        alert("비밀 배치(배치3) 탭이 활성화되었습니다.\n\n배치1의 현재 상태가 그대로 복사되었습니다.\n여기서 학생들을 원하는 최종 목표 자리로 이동시켜 두세요.\n(이후 배치1에서 Shift + 섞기를 누르면 이 목표 자리로 배치됩니다.)");
+    }
+
+    document.getElementById('hideSecretBtn').addEventListener('click', () => {
+        if (layouts.length > 2) {
+            layouts[2].isHidden = true;
+            if (currentLayoutIndex === 2) {
+                switchLayout(0); 
+            } else {
+                renderLayoutTabs();
+            }
+            showToast("배치3(비밀) 탭이 숨겨졌습니다.", "info");
+            saveData();
+        }
+    });
+
+    let savedSidebarScroll = 0;
+
+    function toggleSection(headerEle) {
+        const content = headerEle.nextElementSibling;
+        const icon = headerEle.querySelector('.toggle-icon');
+        if (content.style.display === 'none') {
+            content.style.display = 'block'; icon.innerText = '▼';
+        } else {
+            content.style.display = 'none'; icon.innerText = '▶';
+        }
+    }
+
+    let layouts = [{ id: 'layout_1', name: '배치1(게시용)', students: [], customBoxes: [], attendanceTables: [] }];
+    let currentLayoutIndex = 0;
+    
+    let students = layouts[currentLayoutIndex].students;
+    let customBoxes = layouts[currentLayoutIndex].customBoxes;
+    let attendanceTables = layouts[currentLayoutIndex].attendanceTables || [];
+
+    let swapSelectedIndex = -1;
+    let isEditMode = false;
+    let lastArrangeMode = 'single6'; 
+    let anchorX = 60; let anchorY = 100;
+
+    const excelInput = document.getElementById('excelInput');
+    const seatingGrid = document.getElementById('seating-grid');
+    const studentListContainer = document.getElementById('student-list-container');
+    const toggleEditModeBtn = document.getElementById('toggleEditModeBtn');
+    const arrangeAnchor = document.getElementById('arrange-anchor');
+    const anchorLabel = arrangeAnchor.querySelector('.anchor-label');
+    const layoutTabsContainer = document.getElementById('layoutTabs');
+    const snapUnitSelect = document.getElementById('snapUnitSelect');
+    
+    const arrangeDirectionSelect = document.getElementById('arrangeDirection');
+    const textDirectionSelect = document.getElementById('textDirection');
+    const gapXSlider = document.getElementById('gapXSlider');
+    const gapYSlider = document.getElementById('gapYSlider');
+    
+    const seatWSlider = document.getElementById('seatWSlider');
+    const seatHSlider = document.getElementById('seatHSlider');
+    const seatWVal = document.getElementById('seatWVal');
+    const seatHVal = document.getElementById('seatHVal');
+
+    const displayFormatSelect = document.getElementById('displayFormat');
+    const birthdateFormatSelect = document.getElementById('birthdateFormatSelect');
+    
+    const tableWidthSlider = document.getElementById('tableWidthSlider');
+    const tableHeightSlider = document.getElementById('tableHeightSlider');
+    const col1WidthSlider = document.getElementById('col1WidthSlider');
+    const col2WidthSlider = document.getElementById('col2WidthSlider');
+    const col3WidthSlider = document.getElementById('col3WidthSlider');
+    
+    const tableWidthDisplay = document.getElementById('tableWidthDisplay');
+    const tableHeightDisplay = document.getElementById('tableHeightDisplay');
+    const col1WidthDisplay = document.getElementById('col1WidthDisplay');
+    const col2WidthDisplay = document.getElementById('col2WidthDisplay');
+    const col3WidthDisplay = document.getElementById('col3WidthDisplay');
+    
+    const idFontSizeSlider = document.getElementById('idFontSizeSlider');
+    const nameFontSizeSlider = document.getElementById('nameFontSizeSlider');
+    const tableHeaderFontSizeSlider = document.getElementById('tableHeaderFontSizeSlider');
+    const tableContentFontSizeSlider = document.getElementById('tableContentFontSizeSlider');
+    
+    const sidebar = document.getElementById('sidebar');
+    const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+    const openSidebarBtn = document.getElementById('openSidebarBtn');
+    const addTableBtn = document.getElementById('addTableBtn');
+    const deleteAllTablesBtn = document.getElementById('deleteAllTablesBtn');
+    const hideSecretBtn = document.getElementById('hideSecretBtn');
+
+    document.getElementById('printBtn').addEventListener('click', () => { 
+        currentZoom = 1.0;
+        updateZoom();
+        setTimeout(() => window.print(), 150);
+    });
+
+    a4Board.addEventListener('mousedown', (e) => {
+        if (e.target === a4Board || e.target === seatingGrid) {
+            if (swapSelectedIndex !== -1) {
+                swapSelectedIndex = -1;
+                renderSeats();
+            }
+        }
+    });
+
+    // === DOM 렌더링 최적화: DocumentFragment 적용 ===
+    function renderLayoutTabs() {
+        layoutTabsContainer.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        layouts.forEach((layout, index) => {
+            if (index === 2 && layout.isHidden) return; 
+
+            const btn = document.createElement('button');
+            btn.innerText = layout.name;
+            btn.style.flex = "1"; btn.style.marginBottom = "0"; btn.style.padding = "6px"; btn.style.fontSize = "12px";
+            if (index === currentLayoutIndex) btn.className = "btn-success";
+            else { btn.className = ""; btn.style.background = "#6c757d"; }
+            btn.onclick = () => switchLayout(index);
+            frag.appendChild(btn);
+        });
+        layoutTabsContainer.appendChild(frag);
+
+        if (layouts.length > 2 && !layouts[2].isHidden) hideSecretBtn.style.display = 'block';
+        else hideSecretBtn.style.display = 'none';
+    }
+
+    function switchLayout(index) {
+        layouts[currentLayoutIndex].students = students;
+        layouts[currentLayoutIndex].customBoxes = customBoxes;
+        layouts[currentLayoutIndex].attendanceTables = attendanceTables;
+        
+        currentLayoutIndex = index;
+        students = layouts[currentLayoutIndex].students;
+        customBoxes = layouts[currentLayoutIndex].customBoxes;
+        attendanceTables = layouts[currentLayoutIndex].attendanceTables || [];
+        swapSelectedIndex = -1;
+        
+        document.querySelectorAll('.custom-box').forEach(b => b.remove());
+        document.querySelectorAll('.custom-table-wrapper').forEach(t => t.remove());
+        
+        customBoxes.forEach(boxData => createBoxElement(boxData));
+        attendanceTables.forEach(tData => createTableElement(tData));
+        
+        const shuffleBtn = document.getElementById('bottomShuffleBtn');
+        if (index === 1 || index === 2) shuffleBtn.style.display = 'none'; 
+        else shuffleBtn.style.display = 'block';
+
+        renderLayoutTabs(); updateAll();
+    }
+
+    document.getElementById('flipCopyBtn').addEventListener('click', () => {
+        layouts[currentLayoutIndex].students = students;
+        layouts[currentLayoutIndex].customBoxes = customBoxes;
+        layouts[currentLayoutIndex].attendanceTables = attendanceTables;
+        
+        const newStudents = JSON.parse(JSON.stringify(layouts[0].students));
+        const h = parseInt(seatHSlider.value, 10) || 65;
+        newStudents.forEach(s => { s.y = 794 - parseFloat(s.y) - h; }); 
+        
+        if (layouts.length > 1) {
+            if(confirm("배치1의 학생 배치로 '배치2(교탁용)'를 업데이트하시겠습니까?\n(배치2에 추가해둔 교탁 및 출석부 환경은 그대로 유지됩니다.)")) {
+                layouts[1].students = newStudents; 
+                if (currentLayoutIndex === 1) { students = layouts[1].students; updateAll(); }
+                else switchLayout(1); 
+                showToast("배치2로 상하반전 복사되었습니다.", "success");
+            }
+        } else {
+            const newBoxes = JSON.parse(JSON.stringify(layouts[0].customBoxes));
+            newBoxes.forEach(b => {
+                let t = parseFloat(b.top) || 0; let bh = parseFloat(b.height) || 50;
+                b.top = (794 - t - bh) + 'px'; b.id = 'box_' + Date.now() + Math.floor(Math.random() * 1000); 
+            });
+            const newTables = JSON.parse(JSON.stringify(layouts[0].attendanceTables || []));
+            newTables.forEach(tb => {
+                let t = parseFloat(tb.top) || 0; let th = parseFloat(tb.height) || 400;
+                tb.top = (794 - t - th) + 'px'; tb.id = 'table_' + Date.now() + Math.floor(Math.random() * 1000); 
+            });
+            const newLayout = { id: 'layout_2', name: '배치2(교탁용)', students: newStudents, customBoxes: newBoxes, attendanceTables: newTables };
+            layouts.push(newLayout); switchLayout(1);
+            showToast("배치2가 생성되었습니다.", "success");
+        }
+    });
+
+    document.getElementById('flipCurrentHorizontalBtn').addEventListener('click', () => {
+        if (currentLayoutIndex !== 1) return showToast("좌우 반전 기능은 '배치2(교탁용)' 탭에서만 사용할 수 있습니다.", "error");
+        if (students.length === 0) return showToast("반전할 학생 자리가 존재하지 않습니다.", "error");
+
+        if(confirm("현재 탭(배치2)의 학생 자리만 좌우 반전하시겠습니까?\n(글씨 방향과 추가된 텍스트 박스/출석부는 그대로 유지됩니다.)")) {
+            const w = parseInt(seatWSlider.value, 10) || 110; 
+            students.forEach(s => { s.x = 1123 - parseFloat(s.x) - w; });
+            updateAll();
+            showToast("학생 자리가 성공적으로 좌우 반전되었습니다.", "success");
+        }
+    });
+
+    document.getElementById('deleteLayoutBtn').addEventListener('click', () => {
+        if(layouts.length <= 1) return showToast("삭제할 '배치2(교탁용)'가 존재하지 않습니다.", "error");
+        if(confirm(`'배치2(교탁용)' 탭의 학생 자리만 모두 삭제하시겠습니까?\n(배치2에 추가해둔 텍스트 박스/출석부는 유지됩니다)`)) {
+            layouts[1].students = []; 
+            if (currentLayoutIndex === 1) { students = layouts[1].students; updateAll(); }
+            showToast("배치2 학생 자리가 삭제되었습니다.", "success");
+        }
+    });
+
+    function updateAnchorPosition() {
+        arrangeAnchor.style.left = anchorX + 'px'; arrangeAnchor.style.top = anchorY + 'px';
+        const dir = arrangeDirectionSelect.value;
+        if(dir === 'bottom-right') { arrangeAnchor.className = 'dir-bottom-right'; anchorLabel.innerText = '✥ 기준점 (우하단 시작, ↖방향)'; } 
+        else { arrangeAnchor.className = 'dir-top-left'; anchorLabel.innerText = '✥ 기준점 (좌상단 시작, ↘방향)'; }
+    }
+
+    let isAnchorDragging = false;
+    let aStartX, aStartY, aInitialLeft, aInitialTop;
+
+    arrangeAnchor.addEventListener('mousedown', (e) => {
+        if(!isEditMode) return;
+        bringToFront(arrangeAnchor);
+        isAnchorDragging = true;
+        aStartX = e.clientX; aStartY = e.clientY;
+        aInitialLeft = parseFloat(anchorX); aInitialTop = parseFloat(anchorY);
+        document.body.style.userSelect = 'none';
+        e.stopPropagation();
+        document.addEventListener('mousemove', onAnchorMouseMove);
+        document.addEventListener('mouseup', onAnchorMouseUp);
+    });
+
+    function onAnchorMouseMove(e) {
+        if(!isAnchorDragging) return;
+        let nx = aInitialLeft + (e.clientX - aStartX) / currentZoom;
+        let ny = aInitialTop + (e.clientY - aStartY) / currentZoom;
+        const snap = parseInt(snapUnitSelect.value, 10) || 5;
+        nx = Math.round(nx / snap) * snap;
+        ny = Math.round(ny / snap) * snap;
+        
+        if (nx !== anchorX || ny !== anchorY) {
+            let dx = nx - anchorX; let dy = ny - anchorY;
+            anchorX = nx; anchorY = ny; updateAnchorPosition(); 
+            students.forEach(s => { 
+                s.x = parseFloat(s.x) + dx; 
+                s.y = parseFloat(s.y) + dy; 
+            }); 
+            renderSeats(); 
+        }
+    }
+
+    function onAnchorMouseUp(e) {
+        if(isAnchorDragging) {
+            isAnchorDragging = false;
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onAnchorMouseMove);
+            document.removeEventListener('mouseup', onAnchorMouseUp);
+            saveData();
+        }
+    }
+
+    snapUnitSelect.addEventListener('change', () => saveData());
+
+    toggleEditModeBtn.addEventListener('click', () => {
+        isEditMode = !isEditMode;
+        if(isEditMode) {
+            a4Board.classList.add('edit-mode');
+            toggleEditModeBtn.innerText = '수동 배치 끄기 (현재 열림 🔓)';
+            toggleEditModeBtn.className = 'btn-warning full-width-btn';
+            showToast("수동 배치 모드가 켜졌습니다.", "info");
+        } else {
+            a4Board.classList.remove('edit-mode');
+            toggleEditModeBtn.innerText = '수동 배치 켜기 (현재 잠김 🔒)';
+            toggleEditModeBtn.className = 'btn-success full-width-btn';
+            swapSelectedIndex = -1; renderSeats();
+            showToast("수동 배치 모드가 잠겼습니다.", "info");
+        }
+    });
+
+    document.getElementById('unpinAllBtn').addEventListener('click', () => {
+        if(confirm("모든 학생의 고정(📌) 상태를 해제하시겠습니까?")) {
+            students.forEach(s => s.isFixed = false);
+            updateAll();
+            showToast("모든 고정핀이 해제되었습니다.", "success");
+        }
+    });
+
+    arrangeDirectionSelect.addEventListener('change', () => { updateAnchorPosition(); if(lastArrangeMode) arrangeSeats(lastArrangeMode, true); saveData(); });
+    textDirectionSelect.addEventListener('change', () => { saveData(); renderSeats(); });
+    displayFormatSelect.addEventListener('change', () => { saveData(); renderSeats(); });
+    birthdateFormatSelect.addEventListener('change', () => { saveData(); });
+    
+    idFontSizeSlider.addEventListener('input', (e) => { idFontSizeDisplay.innerText = e.target.value + 'px'; renderSeats(); });
+    idFontSizeSlider.addEventListener('change', () => saveData());
+    
+    nameFontSizeSlider.addEventListener('input', (e) => { nameFontSizeDisplay.innerText = e.target.value + 'px'; renderSeats(); });
+    nameFontSizeSlider.addEventListener('change', () => saveData());
+    
+    tableHeaderFontSizeSlider.addEventListener('input', (e) => { tableHeaderFontSizeDisplay.innerText = e.target.value + 'px'; updateTableStyles(); });
+    tableHeaderFontSizeSlider.addEventListener('change', () => saveData());
+    
+    tableContentFontSizeSlider.addEventListener('input', (e) => { tableContentFontSizeDisplay.innerText = e.target.value + 'px'; updateTableStyles(); });
+    tableContentFontSizeSlider.addEventListener('change', () => saveData());
+
+    let resizeDebounceTimer;
+    const slidersToSave = [tableWidthSlider, tableHeightSlider, col1WidthSlider, col2WidthSlider, col3WidthSlider];
+    slidersToSave.forEach(slider => {
+        slider.addEventListener('input', () => {
+            tableWidthDisplay.innerText = tableWidthSlider.value; tableHeightDisplay.innerText = tableHeightSlider.value;
+            col1WidthDisplay.innerText = col1WidthSlider.value; col2WidthDisplay.innerText = col2WidthSlider.value; col3WidthDisplay.innerText = col3WidthSlider.value;
+            
+            const tw = tableWidthSlider.value + 'px', th = tableHeightSlider.value + 'px';
+            const c1 = col1WidthSlider.value + '%', c2 = col2WidthSlider.value + '%', c3 = col3WidthSlider.value + '%';
+
+            attendanceTables.forEach(t => { t.width = tw; t.height = th; t.col1 = c1; t.col2 = c2; t.col3 = c3; });
+            
+            document.querySelectorAll('.custom-table-wrapper').forEach(wrapper => {
+                wrapper.style.width = tw; wrapper.style.height = th;
+                let cols = wrapper.querySelectorAll('colgroup col');
+                if(cols.length === 3) { cols[0].style.width = c1; cols[1].style.width = c2; cols[2].style.width = c3; }
+            });
+            
+            clearTimeout(resizeDebounceTimer);
+            resizeDebounceTimer = setTimeout(() => { saveData(); }, 500);
+        });
+    });
+
+    seatWSlider.addEventListener('input', (e) => { seatWVal.innerText = e.target.value; if(lastArrangeMode) arrangeSeats(lastArrangeMode, true); });
+    seatWSlider.addEventListener('change', () => saveData());
+    seatHSlider.addEventListener('input', (e) => { seatHVal.innerText = e.target.value; if(lastArrangeMode) arrangeSeats(lastArrangeMode, true); });
+    seatHSlider.addEventListener('change', () => saveData());
+
+    gapXSlider.addEventListener('input', (e) => { gapXVal.innerText = e.target.value; if(lastArrangeMode) arrangeSeats(lastArrangeMode, true); });
+    gapXSlider.addEventListener('change', () => saveData());
+    gapYSlider.addEventListener('input', (e) => { gapYVal.innerText = e.target.value; if(lastArrangeMode) arrangeSeats(lastArrangeMode, true); });
+    gapYSlider.addEventListener('change', () => saveData());
+
+    closeSidebarBtn.addEventListener('click', () => { 
+        savedSidebarScroll = sidebar.scrollTop;
+        sidebar.style.display = 'none'; 
+        openSidebarBtn.style.display = 'block'; 
+    });
+    openSidebarBtn.addEventListener('click', () => { 
+        sidebar.style.display = 'block'; 
+        openSidebarBtn.style.display = 'none'; 
+        sidebar.scrollTop = savedSidebarScroll;
+    });
+
+    document.getElementById('arrangeSingle5Btn').addEventListener('click', () => { arrangeSeats('single5'); showToast("5분단 자동 정렬 완료", "success"); });
+    document.getElementById('arrangeSingle6Btn').addEventListener('click', () => { arrangeSeats('single6'); showToast("6분단 자동 정렬 완료", "success"); });
+    document.getElementById('arrangePairBtn').addEventListener('click', () => { arrangeSeats('pair'); showToast("짝꿍 자동 정렬 완료", "success"); });
+    document.getElementById('arrangeGroupBtn').addEventListener('click', () => { arrangeSeats('group4'); showToast("모둠 자동 정렬 완료", "success"); });
+
+    document.getElementById('sortNumBtn').addEventListener('click', () => {
+        students.sort((a, b) => {
+            let numA = parseInt(a.num, 10) || 0;
+            let numB = parseInt(b.num, 10) || 0;
+            return numA - numB;
+        });
+        updateAll();
+        showToast("번호순으로 정렬되었습니다.", "success");
+    });
+
+    document.getElementById('copyListBtn').addEventListener('click', () => {
+        if(students.length === 0) return showToast("복사할 명단이 없습니다.", "error");
+        let text = "학년\t반\t번호\t이름\t성별\t생년월일\n";
+        students.forEach(s => {
+            text += `${s.grade}\t${s.cls}\t${s.num}\t${s.name}\t${s.gender}\t${s.birthdate}\n`;
+        });
+        navigator.clipboard.writeText(text).then(() => showToast("명단이 클립보드에 복사되었습니다. 엑셀에 붙여넣기 하세요.", "success"));
+    });
+
+    document.getElementById('autoNumBtn').addEventListener('click', () => {
+        if(students.length === 0) return showToast("명단이 비어있습니다.", "error");
+        if(confirm("현재 명단 순서대로 1번부터 번호를 일괄 부여하시겠습니까?")) {
+            students.forEach((s, i) => s.num = i + 1);
+            updateAll();
+            showToast("번호가 일괄 부여되었습니다.", "success");
+        }
+    });
+
+    function arrangeSeats(mode, skipHistory = false) {
+        lastArrangeMode = mode; 
+        if(students.length === 0) return;
+        
+        const gapX = parseInt(gapXSlider.value, 10), gapY = parseInt(gapYSlider.value, 10);
+        const startX = parseFloat(anchorX), startY = parseFloat(anchorY);
+        const w = parseInt(seatWSlider.value, 10), h = parseInt(seatHSlider.value, 10);
+        const dir = arrangeDirectionSelect.value;
+        const dirX = (dir === 'bottom-right') ? -1 : 1; const dirY = (dir === 'bottom-right') ? -1 : 1;
+        
+        students.forEach((s, i) => {
+            let offsetX = 0, offsetY = 0;
+            if(mode === 'single5') {
+                let row = Math.floor(i / 5), col = i % 5;
+                offsetX = col * (w + gapX); offsetY = row * (h + gapY);
+            } else if(mode === 'single6') {
+                let row = Math.floor(i / 6), col = i % 6;
+                offsetX = col * (w + gapX); offsetY = row * (h + gapY);
+            } else if(mode === 'pair') {
+                let row = Math.floor(i / 6), col = i % 6;
+                let pairIndex = Math.floor(col / 2), subIndex = col % 2;
+                offsetX = pairIndex * (w*2 + 10 + gapX) + subIndex * (w + 10);
+                offsetY = row * (h + gapY);
+            } else if(mode === 'group4') {
+                let groupX = Math.floor((i % 6) / 2), groupY = Math.floor(i / 12);      
+                let localX = (i % 6) % 2, localY = Math.floor((i % 12) / 6); 
+                offsetX = groupX * (w*2 + 10 + gapX) + localX * (w + 10);
+                offsetY = groupY * (h*2 + 10 + gapY) + localY * (h + 10);
+            }
+            s.x = startX + (dirX * offsetX); s.y = startY + (dirY * offsetY);
+        });
+        updateAll(skipHistory);
+    }
+
+    function parseDateString(str) {
+        if(!str) return '';
+        let parts = str.split(/[-/.]/);
+        if (parts.length === 3) {
+            let y = parts[0].trim();
+            let m = parts[1].trim().padStart(2, '0');
+            let d = parts[2].trim().padStart(2, '0');
+            if (y.length === 2) y = (parseInt(y, 10) > 30 ? "19" : "20") + y;
+            return `${y}.${m}.${d}`;
+        }
+        let cleaned = str.replace(/[^0-9]/g, '');
+        if(cleaned.length === 8) {
+            return `${cleaned.substring(0,4)}.${cleaned.substring(4,6)}.${cleaned.substring(6,8)}`;
+        }
+        if(cleaned.length === 6) {
+            let y = parseInt(cleaned.substring(0,2), 10);
+            let prefix = y > 30 ? "19" : "20"; 
+            return `${prefix}${cleaned.substring(0,2)}.${cleaned.substring(2,4)}.${cleaned.substring(4,6)}`;
+        }
+        return str.replace(/[-/]/g, '.'); 
+    }
+
+    document.getElementById('parseBtn').addEventListener('click', () => {
+        const rawData = excelInput.value.trim();
+        if(!rawData) { showToast("입력된 데이터가 없습니다. 엑셀을 붙여넣거나 직접 입력해주세요.", "error"); return; }
+        const rows = rawData.split('\n');
+        let newStudents = []; let validIndex = 0;
+        
+        rows.forEach((row) => {
+            if(!row.trim()) return;
+            let cols = row.split('\t').map(c => c.trim());
+            if(cols.length === 1 && row.indexOf('\t') === -1) cols = row.trim().split(/\s+/);
+
+            if (cols.length >= 4) { 
+                const grade = cols[0] || ''; const cls = cols[1] || '';
+                const num = cols[2] || ''; const name = cols[3] || '';
+                const gender = cols[4] || ''; const birthdate = parseDateString(cols[5] || '');
+                if(grade !== '학년' && name !== '이름' && name !== '성명') {
+                    newStudents.push({ grade, cls, num, name, gender, birthdate, x:0, y:0, isFixed: false });
+                    validIndex++;
+                }
+            } else if (cols.length >= 2) {
+                const col1 = cols[0] || ''; const name = cols[1] || ''; const gender = cols[2] || ''; const birthdate = parseDateString(cols[3] || '');
+                if (col1 !== '학번' && col1 !== '번호' && name !== '이름' && name !== '성명') {
+                    let grade = '', cls = '', num = '';
+                    if (!isNaN(col1) && col1.length === 4) { grade = col1.substring(0, 1); cls = parseInt(col1.substring(1, 2), 10).toString(); num = parseInt(col1.substring(2, 4), 10).toString(); } 
+                    else if (!isNaN(col1) && col1.length === 5) { grade = col1.substring(0, 1); cls = parseInt(col1.substring(1, 3), 10).toString(); num = parseInt(col1.substring(3, 5), 10).toString(); } 
+                    else { num = col1; }
+                    newStudents.push({ grade, cls, num, name, gender, birthdate, x:0, y:0, isFixed: false });
+                    validIndex++;
+                }
+            }
+        });
+        
+        if (newStudents.length > 0) {
+            layouts[currentLayoutIndex].students = newStudents;
+            students = layouts[currentLayoutIndex].students;
+            excelInput.value = ''; arrangeSeats(lastArrangeMode);
+            showToast("데이터 일괄 적용 완료", "success");
+        } else {
+            showToast("인식할 수 있는 데이터가 없습니다. 형식을 확인해주세요.", "error");
+        }
+    });
+    excelInput.addEventListener('paste', () => setTimeout(() => document.getElementById('parseBtn').click(), 100));
+
+    function playShuffleAnimation(callback) {
+        let count = 0;
+        let unfixed = students.filter(s => !s.isFixed);
+        if (unfixed.length < 2) { callback(); return; }
+        
+        const interval = setInterval(() => {
+            for (let i = unfixed.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                let tx = unfixed[i].x, ty = unfixed[i].y;
+                unfixed[i].x = unfixed[j].x; unfixed[i].y = unfixed[j].y;
+                unfixed[j].x = tx; unfixed[j].y = ty;
+            }
+            renderSeats();
+            count++;
+            if (count > 10) { 
+                clearInterval(interval);
+                callback();
+            }
+        }, 50);
+    }
+
+    document.getElementById('bottomShuffleBtn').addEventListener('click', (e) => {
+        if(students.length === 0) return showToast("배치할 학생이 없습니다.", "error");
+        if (currentLayoutIndex !== 0) return showToast("자리 섞기는 '배치1(게시용)' 탭에서만 가능합니다.", "error");
+        
+        if (layouts.length > 1 && layouts[1].students.length > 0) {
+            const msg = "⚠️ 자리 랜덤 섞기를 진행하시겠습니까?\n\n[주의] 자리를 섞으면 동기화를 위해 기존 '배치2(교탁용)'의 학생 자리가 자동으로 삭제됩니다. (추가한 텍스트 박스, 출석부는 유지됩니다)";
+            if (!confirm(msg)) return; 
+            layouts[1].students = []; 
+        }
+
+        swapSelectedIndex = -1;
+
+        if (e.shiftKey) { 
+            if (!layouts[2] || layouts[2].students.length === 0) {
+                showToast("배치(배치3)가 설정되어 있지 않습니다. 우측 상단 워터마크를 5번 클릭해 먼저 설정해주세요.", "error");
+                return;
+            }
+            playShuffleAnimation(() => {
+                students.forEach(s1 => {
+                    let s3 = layouts[2].students.find(s => s.name === s1.name && s.num === s1.num);
+                    if (s3) { s1.x = s3.x; s1.y = s3.y; }
+                });
+                updateAll();
+                showToast("자리 배치 완료!", "success");
+            });
+        } else { 
+            playShuffleAnimation(() => {
+                const unfixedStudents = students.filter(s => !s.isFixed);
+                const positions = unfixedStudents.map(s => ({ x: s.x, y: s.y }));
+                for (let i = unfixedStudents.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [unfixedStudents[i], unfixedStudents[j]] = [unfixedStudents[j], unfixedStudents[i]];
+                }
+                unfixedStudents.forEach((s, i) => { s.x = positions[i].x; s.y = positions[i].y; });
+                updateAll();
+                showToast("랜덤 섞기 완료", "success");
+            });
+        }
+    });
+
+    document.getElementById('addStudentBtn').addEventListener('click', () => {
+        students.push({ grade: '1', cls: '1', num: '', name: '새 학생', gender: '', birthdate: '', x: anchorX, y: anchorY, isFixed: false });
+        arrangeSeats(lastArrangeMode);
+        setTimeout(() => {
+            const container = document.getElementById('sidebar');
+            container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+        }, 50);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        if(confirm(`현재 열려있는 '${layouts[currentLayoutIndex].name}' 탭의 명단을 초기화하시겠습니까?`)) {
+            layouts[currentLayoutIndex].students = []; students = layouts[currentLayoutIndex].students;
+            swapSelectedIndex = -1; updateAll();
+            showToast("초기화되었습니다.", "success");
+        }
+    });
+
+    document.getElementById('addBoxBtn').addEventListener('click', () => {
+        const boxId = 'box_' + Date.now();
+        const newBox = { id: boxId, text: '내용 입력', left: '486px', top: '20px', width: '150px', height: '50px', showBorder: true, fontSize: 16, lineHeight: 1.4, bgColor: '#ffffff' };
+        customBoxes.push(newBox);
+        createBoxElement(newBox);
+        saveData();
+    });
+
+    function formatBirthdate(birthStr, format) {
+        if(!birthStr || format === 'none') return "";
+        let b = birthStr.trim();
+        let cleaned = b.replace(/[^0-9]/g, '');
+        let y="", m="", d="";
+
+        if(cleaned.length === 8) {
+            y = cleaned.substring(0,4); m = cleaned.substring(4,6); d = cleaned.substring(6,8);
+        } else if(cleaned.length === 6) {
+            let prefix = parseInt(cleaned.substring(0,2), 10) > 30 ? "19" : "20";
+            y = prefix + cleaned.substring(0,2);
+            m = cleaned.substring(2,4); d = cleaned.substring(4,6);
+        } else if(cleaned.length === 4) {
+            m = cleaned.substring(0,2); d = cleaned.substring(2,4);
+        }
+
+        if(y && m && d) {
+            if(format === 'short') return `${m}.${d}`;
+            if(format === 'full2') return `${y.substring(2,4)}.${m}.${d}`;
+            if(format === 'full4' || format === 'full') return `${y}.${m}.${d}`;
+            return `${y}.${m}.${d}`; 
+        } else if (!y && m && d) {
+            return `${m}.${d}`;
+        }
+
+        if(format === 'short') {
+            let parts = b.split(/[-/.]/);
+            if(parts.length >= 3) return parts[1] + '.' + parts[2];
+            if(parts.length === 2) return parts[0] + '.' + parts[1];
+        }
+        return b.replace(/[-/]/g, '.');
+    }
+
+    addTableBtn.addEventListener('click', () => {
+        if(students.length === 0) return showToast("학생 명단이 비어있습니다. 데이터를 먼저 입력해주세요.", "error");
+        let sorted = [...students].sort((a,b) => (parseInt(a.num, 10)||0) - (parseInt(b.num, 10)||0));
+        let data = [];
+        let bFormat = birthdateFormatSelect.value;
+        let headerName = "이름";
+        if(bFormat !== 'none') headerName += "(생일)";
+        
+        data.push(["번호", headerName, "성별"]); 
+        sorted.forEach(s => { 
+            let nameStr = s.name; let bStr = formatBirthdate(s.birthdate, bFormat);
+            if(bStr) nameStr += `(${bStr})`;
+            data.push([s.num, nameStr, s.gender || ""]); 
+        });
+
+        const newTable = {
+            id: 'table_' + Date.now(), left: '50px', top: '50px',
+            width: tableWidthSlider.value + 'px', height: tableHeightSlider.value + 'px', 
+            col1: col1WidthSlider.value + '%', col2: col2WidthSlider.value + '%', col3: col3WidthSlider.value + '%', 
+            align: 'center', bgColor: '#ffffff', data: data
+        };
+        attendanceTables.push(newTable); createTableElement(newTable); saveData();
+        showToast("출석부가 생성되었습니다.", "success");
+    });
+
+    deleteAllTablesBtn.addEventListener('click', () => {
+        if(attendanceTables.length === 0) return;
+        if(confirm("현재 탭에 있는 출석부 표를 모두 삭제하시겠습니까?")) {
+            document.querySelectorAll('.custom-table-wrapper').forEach(t => t.remove());
+            attendanceTables.length = 0; saveData();
+            showToast("모든 표가 삭제되었습니다.", "success");
+        }
+    });
+
+    // === DOM 렌더링 최적화 ===
+    function renderStudentList() {
+        studentListContainer.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        
+        students.forEach((student, index) => {
+            const row = document.createElement('div');
+            row.className = 'student-row';
+            
+            const errNum = (!student.num || student.num.trim() === '') ? 'error' : '';
+            const errName = (!student.name || student.name.trim() === '') ? 'error' : '';
+
+            row.innerHTML = `
+                <input type="text" class="input-g" value="${student.grade}" title="학년" data-idx="${index}" data-key="grade">
+                <input type="text" class="input-c" value="${student.cls}" title="반" data-idx="${index}" data-key="cls">
+                <input type="text" class="input-n ${errNum}" value="${student.num}" title="번호" data-idx="${index}" data-key="num" placeholder="필수">
+                <input type="text" class="input-name ${errName}" value="${student.name}" title="이름" data-idx="${index}" data-key="name" placeholder="필수 입력">
+                <input type="text" class="input-gen" value="${student.gender || ''}" title="성별" data-idx="${index}" data-key="gender">
+                <input type="text" class="input-birth" value="${student.birthdate || ''}" title="생년월일" data-idx="${index}" data-key="birthdate">
+                <button class="del-btn" data-idx="${index}" title="삭제">X</button>
+            `;
+            frag.appendChild(row);
+        });
+        studentListContainer.appendChild(frag);
+    }
+
+    studentListContainer.addEventListener('input', (e) => {
+        if (e.target.tagName !== 'INPUT') return;
+        const idx = e.target.getAttribute('data-idx');
+        const key = e.target.getAttribute('data-key');
+        
+        if (students[idx]) {
+            students[idx][key] = e.target.value;
+            
+            if (key === 'num' || key === 'name') {
+                if (e.target.value.trim() === '') e.target.classList.add('error');
+                else e.target.classList.remove('error');
+            }
+
+            syncAttendanceTables();
+            document.querySelectorAll('.custom-table-wrapper').forEach(t => t.remove());
+            attendanceTables.forEach(tData => createTableElement(tData));
+            renderSeats();
+            
+            clearTimeout(saveDebounceTimer);
+            saveDebounceTimer = setTimeout(() => { saveData(); }, 400);
+        }
+    });
+
+    studentListContainer.addEventListener('keydown', (e) => {
+        if (e.target.tagName !== 'INPUT') return;
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        const key = e.target.getAttribute('data-key');
+        
+        if (e.key === 'Enter' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextInput = document.querySelector(`.student-row input[data-idx="${idx + 1}"][data-key="${key}"]`);
+            if (nextInput) nextInput.focus();
+            else e.target.blur();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevInput = document.querySelector(`.student-row input[data-idx="${idx - 1}"][data-key="${key}"]`);
+            if (prevInput) prevInput.focus();
+        }
+    });
+
+    studentListContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('del-btn')) {
+            const idx = e.target.getAttribute('data-idx');
+            students.splice(idx, 1);
+            swapSelectedIndex = -1;
+            updateAll();
+        }
+    });
+
+    function getFormattedInfo(student, format) {
+        const g = student.grade || '', c = student.cls || '', n = student.num || '';
+        if(format === 'hakbun4') return `${g.toString().substring(0,1)}${c.toString().substring(0,1)}${n.toString().padStart(2, '0')}`;
+        else if(format === 'hakbun5') return `${g.toString().substring(0,1)}${c.toString().padStart(2, '0')}${n.toString().padStart(2, '0')}`;
+        else if(format === 'num_name') return n ? `${n}.` : '';
+        else if(format === 'name_only') return '';
+        else {
+            let arr = []; if(g) arr.push(`${g}학년`); if(c) arr.push(`${c}반`); if(n) arr.push(`${n}번`);
+            return arr.join(' ');
+        }
+    }
+
+    function renderSeats() {
+        seatingGrid.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        
+        const format = displayFormatSelect.value;
+        const textLayout = textDirectionSelect.value; 
+        const idSize = idFontSizeSlider.value + 'px';
+        const nameSize = nameFontSizeSlider.value + 'px';
+        const w = seatWSlider.value + 'px', h = seatHSlider.value + 'px';
+
+        students.forEach((student, index) => {
+            const seatDiv = document.createElement('div');
+            seatDiv.className = 'seat layout-' + textLayout + (swapSelectedIndex === index ? ' selected' : '');
+            seatDiv.style.left = student.x + 'px';
+            seatDiv.style.top = student.y + 'px';
+            seatDiv.style.width = w;
+            seatDiv.style.height = h;
+            
+            const infoText = getFormattedInfo(student, format);
+            seatDiv.innerHTML = `
+                <div class="seat-pin ${student.isFixed ? 'fixed' : ''}" title="클릭 시 자리 고정">📌</div>
+                ${infoText ? `<div class="seat-info" style="font-size:${idSize};">${infoText}</div>` : ''}
+                <div class="seat-name" style="font-size:${nameSize};">${student.name}</div>
+            `;
+            
+            const pinBtn = seatDiv.querySelector('.seat-pin');
+            pinBtn.addEventListener('mousedown', (e) => { e.stopPropagation(); student.isFixed = !student.isFixed; saveData(); renderSeats(); });
+            
+            let isDragging = false;
+            let startX, startY, initialLeft, initialTop;
+
+            seatDiv.addEventListener('mousedown', (e) => {
+                bringToFront(seatDiv);
+                isDragging = true;
+                startX = e.clientX; startY = e.clientY;
+                initialLeft = parseFloat(seatDiv.style.left) || seatDiv.offsetLeft; 
+                initialTop = parseFloat(seatDiv.style.top) || seatDiv.offsetTop;
+                document.body.style.userSelect = 'none'; 
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            function onMouseMove(e) {
+                if(!isDragging || !isEditMode) return; 
+                let nx = initialLeft + (e.clientX - startX) / currentZoom, ny = initialTop + (e.clientY - startY) / currentZoom;
+                const snap = parseInt(snapUnitSelect.value, 10) || 5;
+                nx = Math.round(nx / snap) * snap; ny = Math.round(ny / snap) * snap;
+                seatDiv.style.left = `${nx}px`; seatDiv.style.top = `${ny}px`;
+            }
+
+            function onMouseUp(e) {
+                if(isDragging) {
+                    isDragging = false;
+                    seatDiv.style.zIndex = '';
+                    document.body.style.userSelect = '';
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                    
+                    const dist = Math.hypot((e.clientX - startX) / currentZoom, (e.clientY - startY) / currentZoom);
+                    if(dist < 5) {
+                        if (swapSelectedIndex === -1) swapSelectedIndex = index; 
+                        else if (swapSelectedIndex === index) swapSelectedIndex = -1; 
+                        else {
+                            const s1 = students[swapSelectedIndex], s2 = students[index];
+                            const tempX = s1.x, tempY = s1.y;
+                            s1.x = s2.x; s1.y = s2.y; s2.x = tempX; s2.y = tempY;
+                            swapSelectedIndex = -1; 
+                        }
+                        saveData(); renderSeats();
+                    } else if(isEditMode) {
+                        student.x = parseFloat(seatDiv.style.left) || seatDiv.offsetLeft; 
+                        student.y = parseFloat(seatDiv.style.top) || seatDiv.offsetTop; 
+                        saveData();
+                    }
+                }
+            }
+            frag.appendChild(seatDiv);
+        });
+        seatingGrid.appendChild(frag);
+    }
+
+    function cleanHTMLText(html) {
+        if (!html) return "";
+        let temp = document.createElement('div');
+        temp.innerHTML = html;
+        return temp.innerText.replace(/\n/g, ' ').trim();
+    }
+
+    function syncAttendanceTables() {
+        let sorted = [...students].sort((a,b) => (parseInt(a.num, 10)||0) - (parseInt(b.num, 10)||0));
+        let bFormat = birthdateFormatSelect.value;
+        
+        attendanceTables.forEach(tData => {
+            let oldData = tData.data || [];
+            let newData = [];
+            
+            let header = (oldData && oldData.length > 0 && oldData[0]) ? oldData[0] : ["번호", "이름", "성별"];
+            
+            if(bFormat !== 'none' && header[1] && !header[1].includes("생일")) header[1] = "이름(생일)";
+            else if (bFormat === 'none' && header[1] && header[1].includes("생일")) header[1] = "이름";
+            
+            newData.push(header);
+            
+            sorted.forEach(s => {
+                let nameStr = s.name; 
+                let bStr = formatBirthdate(s.birthdate, bFormat);
+                if(bStr && bFormat !== 'none') nameStr += `(${bStr})`;
+                let row = [s.num, nameStr, s.gender || ""];
+                let oldRow = oldData.find(r => r[0] == s.num); 
+                let colCount = oldData.length > 0 ? oldData[0].length : 3;
+                for(let i=3; i<colCount; i++) {
+                    let cellVal = oldRow && oldRow[i] !== undefined ? oldRow[i] : "";
+                    row.push(cleanHTMLText(cellVal)); 
+                }
+                newData.push(row);
+            });
+            tData.data = newData;
+        });
+    }
+
+    function updateAll(skipHistory = false) { 
+        syncAttendanceTables(); 
+        saveData(skipHistory); 
+        renderStudentList(); 
+        renderSeats(); 
+        
+        document.querySelectorAll('.custom-table-wrapper').forEach(t => t.remove());
+        attendanceTables.forEach(tData => createTableElement(tData));
+    }
+
+    function updateTableStyles() {
+        const hSize = tableHeaderFontSizeSlider.value + 'px'; const cSize = tableContentFontSizeSlider.value + 'px';
+        document.querySelectorAll('.attendance-table th').forEach(el => el.style.fontSize = hSize);
+        document.querySelectorAll('.attendance-table td').forEach(el => el.style.fontSize = cSize);
+    }
+
+    function createBoxElement(boxData) {
+        const box = document.createElement('div');
+        box.className = 'custom-box ' + (boxData.showBorder ? 'box-bordered' : 'box-borderless');
+        box.id = boxData.id;
+        box.style.left = boxData.left; box.style.top = boxData.top;
+        box.style.width = boxData.width; box.style.height = boxData.height;
+        if(boxData.bgColor) box.style.backgroundColor = boxData.bgColor;
+
+        const tools = document.createElement('div'); tools.className = 'box-tools'; tools.innerHTML = `<span>✥ 이동</span>`;
+        const btnGroup = document.createElement('div'); btnGroup.className = 'box-btn-group';
+        
+        const bgColors = ['#ffffff', '#fff3cd', '#d1ecf1', '#f8d7da', '#e2e3e5']; 
+        let currentColorIdx = bgColors.indexOf(boxData.bgColor || '#ffffff');
+        const colorBtn = document.createElement('button'); colorBtn.innerText = '🎨'; colorBtn.title = '배경색 변경';
+
+        const btnFontMinus = document.createElement('button'); btnFontMinus.innerText = 'A-'; btnFontMinus.title = '글자 작게';
+        const btnFontPlus = document.createElement('button'); btnFontPlus.innerText = 'A+'; btnFontPlus.title = '글자 크게';
+        const btnLineMinus = document.createElement('button'); btnLineMinus.innerText = '↕-'; btnLineMinus.title = '줄간격 좁게';
+        const btnLinePlus = document.createElement('button'); btnLinePlus.innerText = '↕+'; btnLinePlus.title = '줄간격 넓게';
+        const borderBtn = document.createElement('button'); borderBtn.innerText = '선';
+        const deleteBtn = document.createElement('button'); deleteBtn.className = 'btn-del-box'; deleteBtn.innerText = 'X';
+        
+        btnGroup.appendChild(colorBtn);
+        btnGroup.appendChild(btnFontMinus); btnGroup.appendChild(btnFontPlus);
+        btnGroup.appendChild(btnLineMinus); btnGroup.appendChild(btnLinePlus);
+        btnGroup.appendChild(borderBtn); btnGroup.appendChild(deleteBtn); tools.appendChild(btnGroup);
+
+        const content = document.createElement('div');
+        content.className = 'custom-box-content'; content.contentEditable = true; 
+        content.innerHTML = boxData.text; 
+        content.style.fontSize = (boxData.fontSize || 16) + 'px'; 
+        content.style.lineHeight = boxData.lineHeight || 1.4;
+
+        box.appendChild(tools); box.appendChild(content); a4Board.appendChild(box);
+
+        box.addEventListener('mousedown', () => bringToFront(box));
+        content.addEventListener('focus', () => bringToFront(box));
+
+        btnGroup.addEventListener('mousedown', (e) => e.stopPropagation());
+        
+        colorBtn.addEventListener('click', () => {
+            currentColorIdx = (currentColorIdx + 1) % bgColors.length;
+            boxData.bgColor = bgColors[currentColorIdx];
+            box.style.backgroundColor = boxData.bgColor;
+            saveData();
+        });
+
+        btnFontMinus.addEventListener('click', () => {
+            let size = boxData.fontSize || 16; size = Math.max(8, size - 2);
+            boxData.fontSize = size; content.style.fontSize = size + 'px'; saveData();
+        });
+        btnFontPlus.addEventListener('click', () => {
+            let size = boxData.fontSize || 16; size = Math.min(60, size + 2);
+            boxData.fontSize = size; content.style.fontSize = size + 'px'; saveData();
+        });
+        btnLineMinus.addEventListener('click', () => {
+            let lh = boxData.lineHeight || 1.4; lh = Math.max(0.5, lh - 0.1);
+            boxData.lineHeight = lh; content.style.lineHeight = lh; saveData();
+        });
+        btnLinePlus.addEventListener('click', () => {
+            let lh = boxData.lineHeight || 1.4; lh = Math.min(3.0, lh + 0.1);
+            boxData.lineHeight = lh; content.style.lineHeight = lh; saveData();
+        });
+
+        borderBtn.addEventListener('click', () => {
+            const index = customBoxes.findIndex(b => b.id === boxData.id);
+            if(index > -1) { customBoxes[index].showBorder = !customBoxes[index].showBorder; box.className = 'custom-box ' + (customBoxes[index].showBorder ? 'box-bordered' : 'box-borderless'); saveData(); }
+        });
+        content.addEventListener('blur', () => {
+            const index = customBoxes.findIndex(b => b.id === boxData.id);
+            if(index > -1) { customBoxes[index].text = content.innerHTML; saveData(); }
+        });
+
+        let boxResizeTimeout;
+        const resizeObserver = new ResizeObserver(() => {
+            const index = customBoxes.findIndex(b => b.id === boxData.id);
+            if(index > -1) { 
+                customBoxes[index].width = box.style.width || box.offsetWidth + 'px'; 
+                customBoxes[index].height = box.style.height || box.offsetHeight + 'px'; 
+                clearTimeout(boxResizeTimeout); boxResizeTimeout = setTimeout(() => { saveData(); }, 500); 
+            }
+        });
+        resizeObserver.observe(box);
+
+        deleteBtn.addEventListener('click', () => { 
+            resizeObserver.disconnect();
+            box.remove(); 
+            customBoxes = customBoxes.filter(b => b.id !== boxData.id); 
+            saveData(); 
+        });
+
+        let isDragging = false;
+        let startX, startY, initialLeft, initialTop;
+
+        tools.addEventListener('mousedown', (e) => {
+            bringToFront(box);
+            isDragging = true;
+            startX = e.clientX; startY = e.clientY;
+            initialLeft = parseFloat(box.style.left) || box.offsetLeft; 
+            initialTop = parseFloat(box.style.top) || box.offsetTop;
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+
+        function onMouseMove(e) {
+            if (!isDragging) return;
+            let nx = initialLeft + (e.clientX - startX) / currentZoom, ny = initialTop + (e.clientY - startY) / currentZoom;
+            const snap = parseInt(snapUnitSelect.value, 10) || 5;
+            nx = Math.round(nx / snap) * snap; ny = Math.round(ny / snap) * snap;
+            box.style.left = `${nx}px`; box.style.top = `${ny}px`;
+        }
+        function onMouseUp() {
+            if(isDragging) {
+                isDragging = false;
+                document.body.style.userSelect = '';
+                document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp);
+                const index = customBoxes.findIndex(b => b.id === boxData.id);
+                if(index > -1) { customBoxes[index].left = box.style.left; customBoxes[index].top = box.style.top; saveData(); }
+            }
+        }
+    }
+
+    function createTableElement(tableData) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'custom-table-wrapper'; wrapper.id = tableData.id;
+        wrapper.style.left = tableData.left; wrapper.style.top = tableData.top;
+        wrapper.style.width = tableData.width || '300px'; wrapper.style.height = tableData.height || '400px';
+        if(tableData.bgColor) wrapper.style.backgroundColor = tableData.bgColor;
+
+        const tools = document.createElement('div'); tools.className = 'box-tools'; tools.innerHTML = `<span>✥ 이동</span>`;
+        const btnGroup = document.createElement('div'); btnGroup.className = 'box-btn-group';
+        
+        const bgColors = ['#ffffff', '#fff3cd', '#d1ecf1', '#f8d7da', '#e2e3e5'];
+        let currentColorIdx = bgColors.indexOf(tableData.bgColor || '#ffffff');
+        const colorBtn = document.createElement('button'); colorBtn.innerText = '🎨'; colorBtn.title = '표 배경색 변경';
+
+        const alignBtn = document.createElement('button'); 
+        alignBtn.innerText = '정렬'; alignBtn.title = '왼쪽/가운데/오른쪽 정렬';
+        const deleteBtn = document.createElement('button'); deleteBtn.className = 'btn-del-box'; deleteBtn.innerText = 'X';
+        
+        btnGroup.appendChild(colorBtn);
+        btnGroup.appendChild(alignBtn);
+        btnGroup.appendChild(deleteBtn); tools.appendChild(btnGroup);
+
+        const table = document.createElement('table'); table.className = 'attendance-table';
+        
+        table.style.textAlign = tableData.align || 'center';
+        
+        const colgroup = document.createElement('colgroup');
+        const c1 = tableData.col1 || '20%'; const c2 = tableData.col2 || '60%'; const c3 = tableData.col3 || '20%';
+        colgroup.innerHTML = `<col style="width:${c1}"><col style="width:${c2}"><col style="width:${c3}">`;
+        table.appendChild(colgroup);
+
+        const hSize = tableHeaderFontSizeSlider.value + 'px'; const cSize = tableContentFontSizeSlider.value + 'px';
+
+        tableData.data.forEach((row, rIdx) => {
+            const tr = document.createElement('tr');
+            row.forEach((cellText, cIdx) => {
+                const cell = document.createElement(rIdx === 0 ? 'th' : 'td');
+                cell.contentEditable = true; 
+                cell.innerHTML = cellText; 
+                cell.style.fontSize = (rIdx === 0) ? hSize : cSize;
+                
+                cell.addEventListener('blur', () => { 
+                    tableData.data[rIdx][cIdx] = cleanHTMLText(cell.innerHTML); 
+                    saveData(); 
+                });
+                cell.addEventListener('mousedown', (e) => e.stopPropagation());
+                cell.addEventListener('focus', () => bringToFront(wrapper));
+                tr.appendChild(cell);
+            });
+            table.appendChild(tr);
+        });
+
+        wrapper.appendChild(tools); wrapper.appendChild(table); a4Board.appendChild(wrapper);
+
+        wrapper.addEventListener('mousedown', () => bringToFront(wrapper));
+
+        btnGroup.addEventListener('mousedown', (e) => e.stopPropagation());
+        
+        colorBtn.addEventListener('click', () => {
+            currentColorIdx = (currentColorIdx + 1) % bgColors.length;
+            tableData.bgColor = bgColors[currentColorIdx];
+            wrapper.style.backgroundColor = tableData.bgColor;
+            saveData();
+        });
+
+        alignBtn.addEventListener('click', () => {
+            let currentAlign = table.style.textAlign || 'center';
+            let nextAlign = currentAlign === 'center' ? 'left' : (currentAlign === 'left' ? 'right' : 'center');
+            table.style.textAlign = nextAlign;
+            const idx = attendanceTables.findIndex(t => t.id === tableData.id);
+            if(idx > -1) { attendanceTables[idx].align = nextAlign; saveData(); }
+        });
+
+        let tableResizeTimeout;
+        const resizeObserver = new ResizeObserver(() => {
+            const idx = attendanceTables.findIndex(t => t.id === tableData.id);
+            if(idx > -1) { 
+                attendanceTables[idx].width = wrapper.style.width || wrapper.offsetWidth + 'px'; 
+                attendanceTables[idx].height = wrapper.style.height || wrapper.offsetHeight + 'px'; 
+                clearTimeout(tableResizeTimeout); tableResizeTimeout = setTimeout(() => { saveData(); }, 500);
+            }
+        });
+        resizeObserver.observe(wrapper);
+
+        deleteBtn.addEventListener('click', () => { 
+            resizeObserver.disconnect();
+            wrapper.remove(); 
+            attendanceTables = attendanceTables.filter(t => t.id !== tableData.id); 
+            saveData(); 
+        });
+
+        let isDragging = false; let startX, startY, initialLeft, initialTop;
+        tools.addEventListener('mousedown', (e) => {
+            bringToFront(wrapper);
+            isDragging = true; startX = e.clientX; startY = e.clientY;
+            initialLeft = parseFloat(wrapper.style.left) || wrapper.offsetLeft; 
+            initialTop = parseFloat(wrapper.style.top) || wrapper.offsetTop;
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onMouseMove); document.addEventListener('mouseup', onMouseUp);
+        });
+
+        function onMouseMove(e) {
+            if (!isDragging) return;
+            let nx = initialLeft + (e.clientX - startX) / currentZoom, ny = initialTop + (e.clientY - startY) / currentZoom;
+            const snap = parseInt(snapUnitSelect.value, 10) || 5;
+            nx = Math.round(nx / snap) * snap; ny = Math.round(ny / snap) * snap;
+            wrapper.style.left = `${nx}px`; wrapper.style.top = `${ny}px`;
+        }
+
+        function onMouseUp() {
+            if(isDragging) {
+                isDragging = false;
+                document.body.style.userSelect = '';
+                document.removeEventListener('mousemove', onMouseMove); document.removeEventListener('mouseup', onMouseUp);
+                const idx = attendanceTables.findIndex(t => t.id === tableData.id);
+                if(idx > -1) { attendanceTables[idx].left = wrapper.style.left; attendanceTables[idx].top = wrapper.style.top; saveData(); }
+            }
+        }
+    }
+
+    function applyData(data, skipHistory = false) {
+        if (data.layouts) { 
+            layouts = data.layouts;
+            if(layouts[0]) layouts[0].name = '배치1(게시용)';
+            if(layouts[1]) layouts[1].name = '배치2(교탁용)';
+            if(layouts[2]) layouts[2].name = '배치3(비밀)';
+            currentLayoutIndex = data.currentLayoutIndex || 0; 
+        } 
+        else { 
+            layouts[0].name = '배치1(게시용)'; layouts[0].students = data.students || []; layouts[0].customBoxes = data.customBoxes || []; layouts[0].attendanceTables = []; 
+        }
+        
+        if (!layouts[0].attendanceTables) layouts[0].attendanceTables = [];
+        if (layouts[1] && !layouts[1].attendanceTables) layouts[1].attendanceTables = [];
+        if (layouts[2] && !layouts[2].attendanceTables) layouts[2].attendanceTables = [];
+
+        students = layouts[currentLayoutIndex].students; 
+        customBoxes = layouts[currentLayoutIndex].customBoxes;
+        attendanceTables = layouts[currentLayoutIndex].attendanceTables;
+        
+        if(data.snapUnit) snapUnitSelect.value = data.snapUnit;
+        if(data.displayFormat) displayFormatSelect.value = data.displayFormat;
+        if(data.textDirection) textDirectionSelect.value = data.textDirection;
+        if(data.arrangeDirection) arrangeDirectionSelect.value = data.arrangeDirection;
+        
+        if(data.birthdateFormat) birthdateFormatSelect.value = data.birthdateFormat;
+        
+        if(data.idFontSize) { idFontSizeSlider.value = data.idFontSize; idFontSizeDisplay.innerText = data.idFontSize + 'px'; }
+        if(data.nameFontSize) { nameFontSizeSlider.value = data.nameFontSize; nameFontSizeDisplay.innerText = data.nameFontSize + 'px'; }
+        
+        if(data.seatW) { seatWSlider.value = data.seatW; seatWVal.innerText = data.seatW; }
+        if(data.seatH) { seatHSlider.value = data.seatH; seatHVal.innerText = data.seatH; }
+        
+        if(data.tableWidth) { tableWidthSlider.value = data.tableWidth; tableWidthDisplay.innerText = data.tableWidth + 'px'; }
+        if(data.tableHeight) { tableHeightSlider.value = data.tableHeight; tableHeightDisplay.innerText = data.tableHeight + 'px'; }
+        if(data.col1Width) { col1WidthSlider.value = data.col1Width; col1WidthDisplay.innerText = data.col1Width; }
+        if(data.col2Width) { col2WidthSlider.value = data.col2Width; col2WidthDisplay.innerText = data.col2Width; }
+        if(data.col3Width) { col3WidthSlider.value = data.col3Width; col3WidthDisplay.innerText = data.col3Width; }
+
+        if(data.tableHeaderFontSize) { tableHeaderFontSizeSlider.value = data.tableHeaderFontSize; tableHeaderFontSizeDisplay.innerText = data.tableHeaderFontSize + 'px'; }
+        if(data.tableContentFontSize) { tableContentFontSizeSlider.value = data.tableContentFontSize; tableContentFontSizeDisplay.innerText = data.tableContentFontSize + 'px'; }
+        
+        if(data.gapX) { gapXSlider.value = data.gapX; gapXVal.innerText = data.gapX; }
+        if(data.gapY) { gapYSlider.value = data.gapY; gapYVal.innerText = data.gapY; }
+        if(data.lastArrangeMode) lastArrangeMode = data.lastArrangeMode;
+        if(data.anchorX !== undefined) anchorX = parseFloat(data.anchorX);
+        if(data.anchorY !== undefined) anchorY = parseFloat(data.anchorY);
+        
+        updateAnchorPosition(); renderLayoutTabs(); 
+        
+        document.querySelectorAll('.custom-box').forEach(b => b.remove());
+        document.querySelectorAll('.custom-table-wrapper').forEach(t => t.remove());
+
+        customBoxes.forEach(boxData => { if(boxData.showBorder === undefined) boxData.showBorder = true; createBoxElement(boxData); });
+        attendanceTables.forEach(tData => createTableElement(tData));
+
+        const shuffleBtn = document.getElementById('bottomShuffleBtn');
+        if (currentLayoutIndex === 1 || currentLayoutIndex === 2) shuffleBtn.style.display = 'none';
+        else shuffleBtn.style.display = 'block';
+
+        updateAll(skipHistory); 
+    }
+
+    function saveData(skipHistory = false) {
+        layouts[currentLayoutIndex].students = students;
+        layouts[currentLayoutIndex].customBoxes = customBoxes;
+        layouts[currentLayoutIndex].attendanceTables = attendanceTables;
+        
+        const data = { 
+            layouts: layouts, currentLayoutIndex: currentLayoutIndex, snapUnit: snapUnitSelect.value,
+            displayFormat: displayFormatSelect.value, textDirection: textDirectionSelect.value, arrangeDirection: arrangeDirectionSelect.value,
+            birthdateFormat: birthdateFormatSelect.value,
+            idFontSize: idFontSizeSlider.value, nameFontSize: nameFontSizeSlider.value,
+            seatW: seatWSlider.value, seatH: seatHSlider.value,
+            tableWidth: tableWidthSlider.value, tableHeight: tableHeightSlider.value,
+            col1Width: col1WidthSlider.value, col2Width: col2WidthSlider.value, col3Width: col3WidthSlider.value,
+            tableHeaderFontSize: tableHeaderFontSizeSlider.value, tableContentFontSize: tableContentFontSizeSlider.value,
+            gapX: gapXSlider.value, gapY: gapYSlider.value, lastArrangeMode: lastArrangeMode, anchorX: anchorX, anchorY: anchorY
+        };
+        const dataStr = JSON.stringify(data);
+        localStorage.setItem('seatingData', dataStr);
+        
+        if (localFileHandle) {
+            saveToLocalFileSystem(dataStr);
+        }
+
+        if (!skipHistory) {
+            if (historyStack.length === 0 || historyStack[historyStack.length - 1] !== dataStr) {
+                historyStack.push(dataStr);
+                if (historyStack.length > 30) historyStack.shift(); 
+            }
+        }
+    }
+
+    function undo() {
+        if (historyStack.length > 1) {
+            historyStack.pop(); 
+            const prevStateStr = historyStack[historyStack.length - 1]; 
+            const data = JSON.parse(prevStateStr);
+            applyData(data, true); 
+            localStorage.setItem('seatingData', prevStateStr); 
+            if (localFileHandle) saveToLocalFileSystem(prevStateStr);
+            showToast("실행 취소(Undo)", "info");
+        } else {
+            showToast("더 이상 되돌릴 수 없습니다.", "error");
+        }
+    }
+
+    document.getElementById('undoBtn').addEventListener('click', undo);
+    
+    document.addEventListener('keydown', (e) => {
+        const isInputFocused = e.target.isContentEditable || e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+
+        if (e.ctrlKey && e.key.toLowerCase() === 's') {
+            e.preventDefault();
+            document.getElementById('exportDataBtn').click();
+            return;
+        }
+        if (e.ctrlKey && e.key.toLowerCase() === 'p') {
+            e.preventDefault();
+            document.getElementById('printBtn').click();
+            return;
+        }
+        if (e.ctrlKey && e.key.toLowerCase() === 'z') {
+            if (isInputFocused) return; 
+            e.preventDefault();
+            undo();
+            return;
+        }
+
+        if (!isInputFocused && isEditMode && swapSelectedIndex !== -1) {
+            const student = students[swapSelectedIndex];
+            if (student) {
+                const snap = parseInt(snapUnitSelect.value, 10) || 5;
+                const step = e.shiftKey ? snap : 1; 
+                let moved = false;
+
+                if (e.key === 'ArrowUp') { student.y = parseFloat(student.y) - step; moved = true; }
+                else if (e.key === 'ArrowDown') { student.y = parseFloat(student.y) + step; moved = true; }
+                else if (e.key === 'ArrowLeft') { student.x = parseFloat(student.x) - step; moved = true; }
+                else if (e.key === 'ArrowRight') { student.x = parseFloat(student.x) + step; moved = true; }
+
+                if (moved) {
+                    e.preventDefault();
+                    renderSeats();
+                    clearTimeout(saveDebounceTimer);
+                    saveDebounceTimer = setTimeout(() => { saveData(); }, 400);
+                }
+            }
+        }
+    });
+
+    // 선생님을 위한 예쁜 초기 기본 템플릿 세팅 (하드코딩 스크립트 태그 대체용)
+    const DEFAULT_DATA = {"layouts":[{"id":"layout_1","name":"배치1(게시용)","students":[],"customBoxes":[{"id":"box_1790755680225","text":"교탁","left":"460px","top":"90px","width":"150px","height":"50px","showBorder":true,"fontSize":16}],"attendanceTables":[]},{"id":"layout_2","name":"배치2(교탁용)","students":[],"customBoxes":[{"id":"box_1790755776950","text":"교탁","left":"480px","top":"660px","width":"150px","height":"50px","showBorder":true,"fontSize":16},{"id":"box_1790755796540","text":"앞<div><br><div>문</div></div>","left":"70px","top":"535px","width":"60px","height":"166px","showBorder":true,"fontSize":16},{"id":"box_1790755910854","text":"사랑스런 2학년 2반 자리배치표","left":"250px","top":"15px","width":"568px","height":"67px","showBorder":false,"fontSize":34},{"id":"box_1790758150140","text":"<div>사랑스러운 우리 아이들, 다정하게 이름을 불러주시면 더욱 예쁘고 멋지게 자랄 것입니다.</div><div><br></div><div>혹시라도 허락 없이 자리를 바꾸거나 소란스러운 아이가 있다면 언제든 말씀해 주세요. 책임지고 지도하겠습니다.</div><div><br></div><div>항상 우리 2반 아이들을 위해 애써주시고 가르쳐 주셔서 깊이 감사드립니다.</div><div><br></div><div>2반 아이들과 함께 웃음 가득하고 행복한 하루 보내세요!</div>","left":"130px","top":"85px","width":"801px","height":"79px","showBorder":false,"fontSize":12,"lineHeight":0.7}],"attendanceTables":[{"id":"table_1790758574888","left":"945px","top":"20px","width":"150px","height":"723px","col1":"5%","col2":"23%","col3":"5%","data":[["번호","이름(생일)","성별"]]}]},{"id":"layout_3","name":"배치3(비밀)","students":[],"customBoxes":[{"id":"box_1790755680225","text":"교탁","left":"460px","top":"90px","width":"150px","height":"50px","showBorder":true,"fontSize":16}],"attendanceTables":[],"isHidden":true}],"currentLayoutIndex":0,"snapUnit":"3","displayFormat":"num_name","textDirection":"row","arrangeDirection":"top-left","birthdateFormat":"short","idFontSize":"16","nameFontSize":"18","seatW":"115","seatH":"59","tableWidth":"150","tableHeight":"723","col1Width":"5","col2Width":"23","col3Width":"5","tableHeaderFontSize":"10","tableContentFontSize":"10","gapX":"11","gapY":"16","lastArrangeMode":"single5","anchorX":240,"anchorY":190};
+
+    function loadData() {
+        swapSelectedIndex = -1;
+        const saved = localStorage.getItem('seatingData');
+        const preloadEl = document.getElementById('preload-data'); 
+        
+        // 1. 배포용 파일(템플릿)로 열었을 때 (강제 덮어쓰기 후 태그 삭제)
+        if (preloadEl) {
+            const data = JSON.parse(preloadEl.textContent);
+            localStorage.setItem('seatingData', preloadEl.textContent); 
+            applyData(data, false);
+            preloadEl.remove();
+            showToast("템플릿 데이터를 불러왔습니다.", "info");
+        } 
+        // 2. 일반 실행: 이전에 작업 중이던 데이터가 로컬 스토리지에 남아있다면 최우선 로드 (데이터 유지 핵심 로직)
+        else if (saved) {
+            applyData(JSON.parse(saved), false);
+        } 
+        // 3. 최초 실행 (로컬 스토리지도 없고 템플릿 태그도 없을 때)
+        else { 
+            applyData(DEFAULT_DATA, false); 
+        }
+    }
+    window.onload = loadData;
+</script>
+</body>
+</html>

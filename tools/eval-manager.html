@@ -622,8 +622,8 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
             // 현재 저장본을 먼저 보호한 뒤 갱신
             const previous = localStorage.getItem('mathDiary_autoSaveData');
             if (previous && previous !== data) localStorage.setItem('mathDiary_previousAutoSaveData', previous);
-            localStorage.setItem('mathDiary_autoSaveData', data);
-            if(localStorage.getItem('mathDiary_autoSaveData')!==data)throw Error('저장 확인 실패');
+            if(previous!==data){localStorage.setItem('mathDiary_autoSaveData', data);
+            if(localStorage.getItem('mathDiary_autoSaveData')!==data)throw Error('저장 확인 실패');}
             evalSaveBaseline=data;
             const status = document.getElementById('autoSaveStatus');
             if (status) { status.textContent='✅ 자동 저장됨 · ' + new Date().toLocaleTimeString('ko-KR'); status.className='saved'; status.style.opacity='1'; }
@@ -1380,10 +1380,13 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
         const totalTd = tr.querySelector('.total-col');
         if (totalTd) totalTd.innerText = fmtNum(finalConvertedScore, 2);
 
-        if (!skipAvgUpdate) updateAverages();
+        if (!skipAvgUpdate) scheduleAverages();
     };
 
+    let averagesFrame=0;
+    function scheduleAverages(){triggerAutoSave();if(!averagesFrame)averagesFrame=requestAnimationFrame(()=>{averagesFrame=0;updateAverages()})}
     window.updateAverages = function() {
+        if(averagesFrame){cancelAnimationFrame(averagesFrame);averagesFrame=0;}
         const tbody = document.getElementById('tableBody');
         const rows = tbody.querySelectorAll('tr');
         const tfoot = document.getElementById('tableFoot');
@@ -1426,7 +1429,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                     });
                     
                     const rawTd = tr.querySelector(`.d${dIdx}-raw`);
-                    if (rawTd) sums[`d${dIdx}_raw`] += parseFloat(rawTd.innerText) || 0;
+                    if (rawTd) sums[`d${dIdx}_raw`] += parseFloat(rawTd.textContent) || 0;
                     
                     const convTd = tr.querySelector(`.d${dIdx}-conv`);
                     if (convTd) {
@@ -1435,7 +1438,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                 }
             });
             const totalTd = tr.querySelector('.total-col');
-            if (totalTd) sums.total += parseFloat(totalTd.innerText) || 0;
+            if (totalTd) sums.total += parseFloat(totalTd.textContent) || 0;
         });
 
         configData.forEach((domain, dIdx) => {

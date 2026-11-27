@@ -355,6 +355,23 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
 /* Assessment workspaces and local publishing. */
 @media screen{.eval-workspace{display:flex;gap:5px;align-items:center;flex-wrap:wrap;border:1px solid #dce3ed;border-radius:6px;background:#f8fafc;padding:5px 7px;margin-bottom:5px;font-size:12px}.eval-workspace select,.eval-workspace button{font:inherit;padding:5px 8px;background:#fff;border:1px solid #b8c8da;border-radius:5px;color:#263d57}.eval-workspace select{flex:1;max-width:420px;min-width:140px}.eval-workspace .bridge-primary,.bridge-dialog .bridge-primary{background:#2458a6;color:white;border-color:#2458a6;font-weight:700}.eval-workspace .bridge-note{color:#526579;font-size:11px}.bridge-dialog{box-sizing:border-box;width:min(830px,96vw);max-height:88vh;overflow:auto;padding:16px;border:1px solid #b8c8da;border-radius:10px;color:#1e293b}.bridge-dialog::backdrop{background:#132b455e}.bridge-dialog h3{margin:0 0 8px;font-size:19px}.bridge-dialog h4{margin:12px 0 6px}.bridge-dialog p{font-size:13px;line-height:1.5;margin:7px 0}.bridge-dialog button,.bridge-dialog input,.bridge-dialog select{font:inherit;border:1px solid #cbd5e1;border-radius:5px;padding:6px;background:white;color:#334155}.bridge-dialog button{cursor:pointer}.bridge-dialog button:disabled{opacity:.5;cursor:not-allowed}.bridge-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.bridge-fields{display:grid;grid-template-columns:1fr 1fr 1fr 2fr;gap:7px}.bridge-fields label{display:flex;flex-direction:column;gap:4px;font-size:12px;min-width:0}.bridge-fields input,.bridge-fields select{width:100%;min-width:0;box-sizing:border-box}.bridge-students{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:6px;max-height:230px;overflow:auto;border:1px solid #dce3ed;padding:7px;border-radius:5px}.bridge-students label{font-size:12px;display:flex;align-items:center;gap:4px}.bridge-students label[hidden]{display:none!important}.bridge-error{color:#a12626!important}.bridge-domain{display:grid;grid-template-columns:1fr 1.5fr 85px;gap:8px;align-items:center;margin:5px 0}.bridge-domain input{min-width:0;width:100%;box-sizing:border-box}.bridge-dialog footer{position:sticky;bottom:-16px;background:#fff;padding:10px 0;display:flex;justify-content:flex-end;gap:8px;border-top:1px solid #dce3ed}.bridge-class{border:1px solid #dce3ed;padding:6px;border-radius:5px;font-size:13px}@media(max-width:650px){.bridge-fields{grid-template-columns:1fr 1fr}.bridge-domain{grid-template-columns:1fr 90px}.bridge-domain label{grid-column:1/-1}}}
 @media print{.eval-workspace,.bridge-dialog{display:none!important}}
+
+@media screen{
+#printSelectionDialog{width:min(760px,96vw)}
+#printSelectionDialog [hidden]{display:none!important}
+#printSelectionDialog .print-modes{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+#printSelectionDialog .print-modes label{display:flex;align-items:center;gap:5px;flex:1;min-width:120px;padding:9px;border:1px solid #b8c8da;border-radius:6px;background:#f8fafc;cursor:pointer;font-weight:650;font-size:13px}
+#printSelectionDialog .print-modes label:has(input:checked){border-color:#2458a6;background:#edf4ff}
+#printSelectionDialog .print-classes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+#printSelectionDialog .print-classes label{display:flex;align-items:center;gap:5px;padding:7px;border:1px solid #dce3ed;border-radius:6px}
+#printSelectionDialog .print-student-row{padding:5px 6px;min-height:33px;background:#f8fafc;border-radius:4px}
+#printSelectionDialog .print-student-row:has(input:checked){background:#e9f2ff}
+#printSelectionDialog .print-student-row span{overflow-wrap:anywhere}
+#printSelectionDialog .print-selection-filter{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin:8px 0}
+#printSelectionDialog .print-selection-filter input[type=search]{flex:1;min-width:130px}
+#printSelectionDialog .print-selection-summary{font-weight:700;color:#2458a6}
+#printSelectionDialog .print-prefs{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;padding:8px 0;border-top:1px solid #dce3ed;margin-top:8px}
+}
     </style>
 <script>if(window.self!==window.top)document.documentElement.classList.add('portal-embedded');</script>
 </head>
@@ -402,7 +419,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
 <textarea id="excelInput" placeholder="이곳은 '명단(학번/이름 또는 학년/반/번호/이름)'을 붙여넣는 곳입니다.
 예시: 1 3 1 홍길동(➔1301) / 1 03 1 홍길동(➔10301) / 1/10/1/김철수(➔11001)
 점수(숫자) 일괄 붙여넣기는 아래 표 안의 [📋 영역 일괄붙여넣기] 또는 세부항목별 [📋 일괄붙여넣기] 버튼을 누르세요."></textarea>
-</div><div class="side-action-stack"><button class="action-btn btn-primary" onclick="generateFromExcel()">📋 명단 불러오기</button><button class="action-btn btn-secondary" onclick="generateEmptyRows(500)">빈 칸 500개 만들기</button><label>학생 추가 <input id="addStudentCount" max="5000" min="1" style="width:65px;padding:8px" type="number" value="1"/>명</label><button class="action-btn btn-primary" onclick="appendEmptyStudents()">➕ 학생 추가</button><button class="action-btn btn-secondary" onclick="generateFromExcel(true)">📋 입력창 명단 추가</button></div></div></section><section class="work-menu-panel work-menu-panel-2" id="workMenuPanel2" aria-labelledby="workMenuTab2" hidden><div class="side-body"><p class="side-hint">흑백 출력과 학생별 평균 표시를 설정합니다.</p><div class="side-action-stack"><button class="action-btn btn-copy" onclick="copyAllToExcel()">📋 전체 결과 엑셀 복사</button><button class="action-btn btn-copy-feedback" onclick="copyIndividualReports()">📝 텍스트 피드백 복사</button><button class="action-btn btn-print" onclick="printIndividualReports()">🖨️ 1인 1페이지 결과표 인쇄</button><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowRules" type="checkbox"/>인쇄 시 평가 기준표 포함</label><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowAverages" type="checkbox"/>반·전체 평균 표시</label></div></div></section><section class="work-menu-panel work-menu-panel-3" id="workMenuPanel3" aria-labelledby="workMenuTab3" hidden><div class="side-body"><div class="tab-setting">
+</div><div class="side-action-stack"><button class="action-btn btn-primary" onclick="generateFromExcel()">📋 명단 불러오기</button><button class="action-btn btn-secondary" onclick="generateEmptyRows(500)">빈 칸 500개 만들기</button><label>학생 추가 <input id="addStudentCount" max="5000" min="1" style="width:65px;padding:8px" type="number" value="1"/>명</label><button class="action-btn btn-primary" onclick="appendEmptyStudents()">➕ 학생 추가</button><button class="action-btn btn-secondary" onclick="generateFromExcel(true)">📋 입력창 명단 추가</button></div></div></section><section class="work-menu-panel work-menu-panel-2" id="workMenuPanel2" aria-labelledby="workMenuTab2" hidden><div class="side-body"><p class="side-hint">전체·반별·선택 학생을 1인 1페이지로 출력하고 흑백 인쇄 및 평균 표시를 설정합니다.</p><div class="side-action-stack"><button class="action-btn btn-copy" onclick="copyAllToExcel()">📋 전체 결과 엑셀 복사</button><button class="action-btn btn-copy-feedback" onclick="copyIndividualReports()">📝 텍스트 피드백 복사</button><button class="action-btn btn-print" onclick="printIndividualReports()">🖨️ 출력 대상 선택 및 인쇄</button><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowRules" type="checkbox"/>인쇄 시 평가 기준표 포함</label><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowAverages" type="checkbox"/>반·전체 평균 표시</label></div></div></section><section class="work-menu-panel work-menu-panel-3" id="workMenuPanel3" aria-labelledby="workMenuTab3" hidden><div class="side-body"><div class="tab-setting">
 <span>⌨️ 키보드(Tab / Enter) 누를 때 이동할 방향:</span>
 <label><input checked="" name="tabDirection" type="radio" value="vertical"/> ⬇️ 아래 학생으로 이동 (추천)</label>
 <label><input name="tabDirection" type="radio" value="horizontal"/> ➡️ 우측 다음 항목으로 이동</label>
@@ -496,6 +513,16 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
 </div>
 </div>
 
+<dialog id="printSelectionDialog" class="bridge-dialog" aria-labelledby="printSelectionTitle">
+<h3 id="printSelectionTitle">수행평가 결과표 출력</h3>
+<p>출력할 학생을 선택하세요. 기존 채점 자료 및 반·전체 평균 계산 범위는 변경되지 않습니다.</p>
+<div class="print-modes"><label><input type="radio" name="reportSelectionMode" value="all" checked>전체 학생</label><label><input type="radio" name="reportSelectionMode" value="class">반별 출력</label><label><input type="radio" name="reportSelectionMode" value="individual">학생 직접 선택</label></div>
+<section id="reportClassSection" hidden><h4>출력할 반 선택 (여러 반 가능)</h4><div class="bridge-row"><button type="button" id="reportClassAll">전체 반 선택</button><button type="button" id="reportClassNone">선택 해제</button></div><div id="reportClassChoices" class="print-classes"></div><p id="reportUnclassified"></p></section>
+<section id="reportIndividualSection" hidden><h4>학생 선택</h4><div class="print-selection-filter"><select id="reportFilterClass" aria-label="학생 선택 반 필터"></select><input type="search" id="reportFilterText" placeholder="학번 또는 이름 검색" aria-label="학번 또는 이름 검색"></div><div class="bridge-row"><button type="button" id="reportVisibleAll">조회 학생 전체 선택</button><button type="button" id="reportVisibleNone">조회 학생 선택 해제</button><button type="button" id="reportNone">모든 선택 해제</button></div><div id="reportStudentChoices" class="bridge-students" style="margin-top:8px;max-height:300px"></div><p id="reportNoMatch" hidden>검색 조건에 맞는 학생이 없습니다.</p></section>
+<div class="print-prefs"><label><input type="checkbox" id="reportRulesOption"> 평가 기준표 포함</label><label><input type="checkbox" id="reportAveragesOption"> 반·전체 평균 표시</label></div>
+<p id="reportSelectionSummary" class="print-selection-summary" role="status"></p>
+<footer><button type="button" id="reportSelectionCancel">취소</button><button type="button" id="reportSelectionPrint" class="bridge-primary">인쇄 미리보기</button></footer>
+</dialog>
 
 <script>
     let configData = [
@@ -2024,11 +2051,13 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
         }).catch(() => { alert("복사에 실패했습니다."); });
     };
 
-    window.printIndividualReports = function() {
+    window.printIndividualReports = function(selectedRows) {
+        if(!(selectedRows instanceof Set)){openPrintSelection();return;}
         // 채점 표의 집계 결과를 먼저 갱신합니다.
         document.querySelectorAll('#tableBody tr').forEach(tr => {if(tr.querySelector('.stu-id')) calcRow(tr,true);});
         const metrics=getEvaluationAverages();
-        if (!metrics.rows.length) {alert('학번이나 이름이 입력된 학생이 없습니다. 먼저 명단을 입력하세요.');return;}
+        const outputRows=metrics.rows.filter(tr=>selectedRows.has(tr));
+        if (!outputRows.length) {alert('출력할 학생을 선택해 주세요.');return;}
         const showRules=document.getElementById('printShowRules')?.checked !== false;
         const showAverages=document.getElementById('printShowAverages')?.checked !== false;
         const w=window.open('', '_blank');
@@ -2043,7 +2072,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
         const fmtAvg=(num)=>num===null?'—':fmtNum(num,2)+'점';
         const compare=(studentScore,average)=>average===null?'표본 없음':(studentScore>=average?'평균 이상':'평균 미만');
         let pages='';
-        metrics.rows.forEach((tr,index)=>{
+        outputRows.forEach((tr,index)=>{
             const id=tr.querySelector('.stu-id')?.value.trim()||'';
             const name=tr.querySelector('.stu-name')?.value.trim()||'';
             const cls=getClassIdentity(id);
@@ -2080,7 +2109,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                 blocks+=`<section class="domain"><div class="domain-head"><div class="domain-heading"><span class="domain-number" aria-label="평가 영역 번호">${printedDomainNumber}.</span><b>${escapeHtml(domain.domainTitle)}</b></div><span>배점 ${fmtNum(domain.convertedBaseScore)}점</span></div>${rule}<div class="section-label item-heading"><span>평가 항목별 결과</span><span>획득 / 만점 기준</span></div><div class="item-list">${itemRows}</div>${reason}<div class="domain-footer"><span>최종 환산 점수</span><strong>${fmtNum(converted,2)}<small> / ${fmtNum(domain.convertedBaseScore)}점</small></strong></div>${averages}</section>`;
             });
             const avgCards=showAverages?`<div class="summary-avg"><div><span>${cls?'우리 반 평균':'반 평균'}</span><strong>${fmtAvg(classAvg)}</strong><small>${group?group.count+'명 기준':'학번 확인 필요'}</small></div><div><span>전체 학생 평균</span><strong>${fmtAvg(overallAvg)}</strong><small>입력된 학생 ${metrics.all.count}명</small></div></div>`:'';
-            pages+=`<article class="page"><div class="fit-frame"><div class="report-content"><header class="report-header"><div class="eyebrow">학생 개인 평가 결과표</div><h1>${title}</h1><div class="student-meta"><span><b>학번</b> ${escapeHtml(id||'미입력')}</span><span><b>이름</b> ${escapeHtml(name||'미입력')}</span><span><b>소속</b> ${cls?escapeHtml(cls.label):'학번 확인 필요'}</span></div></header><section class="score-overview"><div class="score-highlight"><span>나의 평가 점수</span><strong>${fmtNum(total,2)}<small> / ${fmtNum(fullScore,2)}점</small></strong></div>${avgCards}</section><p class="score-legend">※ 세부 항목의 ‘획득 / 만점 기준’은 입력값과 설정된 항목별 기준(점·개)을 뜻합니다. ‘—’는 만점 기준 미설정입니다. 실제 반영 점수는 각 영역의 ‘최종 환산 점수’로 확인하세요.</p><div class="domain-grid">${blocks}</div><footer class="footer-note">위 점수와 평균은 이 결과표에 표시된 평가 영역만을 기준으로 계산했습니다. 평균 대상은 현재 명단에서 학번 또는 이름이 입력된 학생입니다. 학번 형식은 4자리(학년·반·번호) 또는 5자리(학년·두 자리 반·번호)입니다.<span class="page-no">${index+1} / ${metrics.rows.length}</span></footer></div></div></article>`;
+            pages+=`<article class="page"><div class="fit-frame"><div class="report-content"><header class="report-header"><div class="eyebrow">학생 개인 평가 결과표</div><h1>${title}</h1><div class="student-meta"><span><b>학번</b> ${escapeHtml(id||'미입력')}</span><span><b>이름</b> ${escapeHtml(name||'미입력')}</span><span><b>소속</b> ${cls?escapeHtml(cls.label):'학번 확인 필요'}</span></div></header><section class="score-overview"><div class="score-highlight"><span>나의 평가 점수</span><strong>${fmtNum(total,2)}<small> / ${fmtNum(fullScore,2)}점</small></strong></div>${avgCards}</section><p class="score-legend">※ 세부 항목의 ‘획득 / 만점 기준’은 입력값과 설정된 항목별 기준(점·개)을 뜻합니다. ‘—’는 만점 기준 미설정입니다. 실제 반영 점수는 각 영역의 ‘최종 환산 점수’로 확인하세요.</p><div class="domain-grid">${blocks}</div><footer class="footer-note">위 점수와 평균은 이 결과표에 표시된 평가 영역만을 기준으로 계산했습니다. 평균 대상은 현재 명단에서 학번 또는 이름이 입력된 학생입니다. 학번 형식은 4자리(학년·반·번호) 또는 5자리(학년·두 자리 반·번호)입니다.<span class="page-no">${index+1} / ${outputRows.length}</span></footer></div></div></article>`;
         });
         const html=`<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>${title} · 인쇄 미리보기</title><style>
           *{box-sizing:border-box}
@@ -2172,7 +2201,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
             .page+.page{break-before:page;page-break-before:always}
           }
           @media screen and (max-width:780px){.page{margin:10px 0}.print-toolbar{position:static}}
-          </style></head><body><div class="print-toolbar"><button id="printNow">🖨️ 인쇄 / PDF 저장</button><span>학생 ${metrics.rows.length}명 · A4 개인별 결과표</span><span id="fitStatus" role="status"></span></div>${pages}<script>
+          </style></head><body><div class="print-toolbar"><button id="printNow">🖨️ 인쇄 / PDF 저장</button><span>학생 ${outputRows.length}명 · A4 개인별 결과표</span><span id="fitStatus" role="status"></span></div>${pages}<script>
           (function(){
             const pages=Array.from(document.querySelectorAll('.page'));
             function fitReports(){
@@ -2652,6 +2681,67 @@ document.getElementById('workspaceArchiveRestore').onclick=()=>document.getEleme
 document.getElementById('workspaceArchiveFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;const p=JSON.parse(await f.text());if(p.format!=='mathkoni-eval-workspaces-v1')throw Error('작업 전체 백업 형식이 아닙니다.');const incoming=workspaceArchive(JSON.stringify(p));for(const x of incoming.entries)normalizeSavedData(x.data,false);if(!confirm(incoming.entries.length+'개 작업을 별도 복원본으로 추가할까요? 현재 작업은 유지합니다.'))return;const raw=localStorage.getItem(WORKSPACE_KEY),a=workspaceArchive(raw);for(const x of incoming.entries){const meta={...normalizeWorkspaceMeta(x.data.workspace),id:workspaceId(),name:x.name+' (복원)'};a.entries.push({...x,id:meta.id,name:meta.name,data:{...x.data,workspace:meta}})}if(localStorage.getItem(WORKSPACE_KEY)!==raw)throw Error('보관함 자료 변경 감지');localStorage.setItem(WORKSPACE_KEY,JSON.stringify(a));refreshWorkspaceList()}catch(err){alert(err.message)}finally{e.target.value=''}};
 window.addEventListener('storage',e=>{if(e.key===WORKSPACE_KEY)refreshWorkspaceList()});
 
+
+    function reportOutputStudents(students,mode,classes,selected){
+        if(mode==='class')return students.filter(s=>s.cls&&classes.has(s.cls.key));
+        if(mode==='individual')return students.filter(s=>selected.has(s.tr));
+        return students;
+    }
+    (function(){
+        const $=id=>document.getElementById(id),dialog=$('printSelectionDialog');
+        let students=[],classes=new Set(),selected=new Set(),studentControls=[],classControls=[];
+        const mode=()=>dialog.querySelector('input[name="reportSelectionMode"]:checked').value;
+        const filterKey=()=> $('reportFilterClass').value;
+        const normalize=x=>String(x??'').normalize('NFC').trim().toLocaleLowerCase('ko-KR');
+        function visible(s){const f=filterKey(),q=normalize($('reportFilterText').value);return (!f||(f==='unclassified'?!s.cls:s.cls?.key===f))&&(!q||normalize(s.id+' '+s.name).includes(q));}
+        function checkbox(text,cb,css){const l=document.createElement('label'),c=document.createElement('input'),span=document.createElement('span');c.type='checkbox';span.textContent=text;l.append(c,span);if(css)l.className=css;c.onchange=()=>cb(c.checked);return {l,c};}
+        function refresh(){
+            const m=mode(),out=reportOutputStudents(students,m,classes,selected);
+            $('reportClassSection').hidden=m!=='class';$('reportIndividualSection').hidden=m!=='individual';
+            let shown=0;for(const x of studentControls){x.l.hidden=!visible(x.student);x.c.checked=selected.has(x.student.tr);if(!x.l.hidden)shown++}
+            for(const x of classControls)x.c.checked=classes.has(x.key);
+            $('reportNoMatch').hidden=shown>0;
+            $('reportVisibleAll').disabled=!shown;$('reportVisibleNone').disabled=!shown;
+            $('reportSelectionSummary').textContent='출력 대상 '+out.length+'명 / 전체 '+students.length+'명 · A4 '+out.length+'장'+(m==='individual'?' · 현재 검색 '+shown+'명':'');
+            $('reportSelectionPrint').disabled=!out.length;
+        }
+        window.openPrintSelection=function(){
+            sortStudentRows();
+            students=Array.from(document.querySelectorAll('#tableBody tr')).map(tr=>{const id=tr.querySelector('.stu-id')?.value.trim()||'',name=tr.querySelector('.stu-name')?.value.trim()||'';return {tr,id,name,cls:getClassIdentity(id)}}).filter(s=>s.id||s.name);
+            if(!students.length){alert('학번이나 이름이 입력된 학생이 없습니다. 먼저 명단을 입력하세요.');return;}
+            if(!configData.some(d=>d.items.length&&d.printEnabled!==false)){alert('인쇄할 평가 영역이 없습니다. 평가 영역 설정에서 인쇄할 영역을 체크해 주세요.');return;}
+            const groups=new Map();let unknown=0;
+            for(const s of students){if(!s.cls){unknown++;continue;}const g=groups.get(s.cls.key)||{...s.cls,count:0};g.count++;groups.set(s.cls.key,g);}
+            const ordered=[...groups.values()].sort((a,b)=>a.key.localeCompare(b.key,'ko',{numeric:true}));
+            classes=new Set(ordered.map(g=>g.key));selected=new Set();classControls=[];studentControls=[];
+            $('reportClassChoices').replaceChildren();$('reportStudentChoices').replaceChildren();
+            $('reportFilterClass').replaceChildren(new Option('전체 반',''),...ordered.map(g=>new Option(g.label+' ('+g.count+'명)',g.key)),...(unknown?[new Option('학번 확인 필요 ('+unknown+'명)','unclassified')]:[]));
+            $('reportFilterText').value='';
+            for(const g of ordered){const x=checkbox(g.label+' ('+g.count+'명)',v=>{if(v)classes.add(g.key);else classes.delete(g.key);refresh()});$('reportClassChoices').append(x.l);classControls.push({...x,key:g.key});}
+            $('reportUnclassified').textContent=unknown?'학번으로 반을 확인할 수 없는 '+unknown+'명은 전체 또는 학생 직접 선택으로 출력할 수 있습니다.':ordered.length?'':'반을 확인할 수 있는 학번이 없습니다.';
+            const fragment=document.createDocumentFragment();
+            for(const student of students){const x=checkbox([student.id||'학번 미입력',student.name||'이름 미입력'].join(' '),v=>{if(v)selected.add(student.tr);else selected.delete(student.tr);refresh()},'print-student-row');fragment.append(x.l);studentControls.push({...x,student});}
+            $('reportStudentChoices').append(fragment);
+            dialog.querySelector('input[name="reportSelectionMode"][value="all"]').checked=true;
+            $('reportRulesOption').checked=$('printShowRules').checked;$('reportAveragesOption').checked=$('printShowAverages').checked;
+            refresh();dialog.showModal();
+        };
+        dialog.querySelectorAll('input[name="reportSelectionMode"]').forEach(x=>x.onchange=refresh);
+        $('reportClassAll').onclick=()=>{classes=new Set(classControls.map(x=>x.key));refresh()};
+        $('reportClassNone').onclick=()=>{classes.clear();refresh()};
+        $('reportFilterClass').onchange=$('reportFilterText').oninput=refresh;
+        $('reportVisibleAll').onclick=()=>{students.filter(visible).forEach(s=>selected.add(s.tr));refresh()};
+        $('reportVisibleNone').onclick=()=>{students.filter(visible).forEach(s=>selected.delete(s.tr));refresh()};
+        $('reportNone').onclick=()=>{selected.clear();refresh()};
+        $('reportSelectionCancel').onclick=()=>dialog.close();
+        $('reportSelectionPrint').onclick=()=>{
+            const rows=reportOutputStudents(students,mode(),classes,selected);
+            if(!rows.length)return;
+            $('printShowRules').checked=$('reportRulesOption').checked;$('printShowAverages').checked=$('reportAveragesOption').checked;
+            printIndividualReports(new Set(rows.map(s=>s.tr)));
+            dialog.close();
+        };
+    })();
 
 </script>
 </body>

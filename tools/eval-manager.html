@@ -577,7 +577,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                     if (match) {
                         const rawVal = el.tagName === 'INPUT' ? el.value : el.getAttribute('data-val');
                         const parsedVal = Number(rawVal);
-                        const score = Number.isFinite(parsedVal) ? parsedVal : 0;
+                        const score = el.tagName === 'INPUT' && rawVal.trim() === '' ? '' : Number.isFinite(parsedVal) ? parsedVal : 0;
                         scores[match[1]] = score;
                         if (el.dataset.itemId) scoresById[el.dataset.itemId] = score;
                     }
@@ -1270,9 +1270,9 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                 const key = `d${dIdx}-i${iIdx}`;
                 let val = item.defaultVal;
                 if (scoresById && Object.prototype.hasOwnProperty.call(scoresById, item.itemId) && Number.isFinite(Number(scoresById[item.itemId]))) {
-                    val = Number(scoresById[item.itemId]);
+                    val = item.type==='number' && scoresById[item.itemId]==='' ? '' : Number(scoresById[item.itemId]);
                 } else if (!scoresById && Object.prototype.hasOwnProperty.call(scores, key) && Number.isFinite(Number(scores[key]))) {
-                    val = Number(scores[key]);
+                    val = item.type==='number' && scores[key]==='' ? '' : Number(scores[key]);
                 }
 
                 if (item.type === 'button' && item.options && item.options.length > 0) {
@@ -2317,6 +2317,7 @@ body[data-grade-density="wide"] #evalTable{--n-width:52px;--id-width:95px;--name
                 const parsed = JSON.parse(e.target.result);
                 const isTemplate = Array.isArray(parsed) || (parsed && typeof parsed === 'object' && !Object.prototype.hasOwnProperty.call(parsed, 'students'));
                 normalizeSavedData(parsed, isTemplate); // 먼저 검사하여 실패한 파일은 기존 데이터를 변경하지 않는다.
+                if(!evalSaveBlocked && localStorage.getItem('mathDiary_autoSaveData')===evalSaveBaseline && !persistCurrentData())throw Error('현재 작업 저장 실패. 전체 백업 후 다시 불러오세요.');
                 dataRestoreInProgress = true;
                 if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
                 preservePreviousAutoSave();
@@ -2555,7 +2556,7 @@ function archiveWorkspace(payload,meta){
  const next={id:meta.id,name:meta.name,updatedAt:new Date().toISOString(),data:{...payload,workspace:meta}};
  archive.entries=archive.entries.filter(e=>e.id!==meta.id);archive.entries.push(next);
  if(localStorage.getItem(WORKSPACE_KEY)!==raw)throw Error('다른 창에서 작업 보관함이 변경되었습니다.');
- const encoded=JSON.stringify(archive);localStorage.setItem(WORKSPACE_KEY,encoded);if(localStorage.getItem(WORKSPACE_KEY)!==encoded)throw Error('작업 보관함 저장 실패');
+ const encoded=JSON.stringify(archive);if(raw!==null&&raw!==encoded)localStorage.setItem(WORKSPACE_KEY+'-previous',raw);localStorage.setItem(WORKSPACE_KEY,encoded);if(localStorage.getItem(WORKSPACE_KEY)!==encoded)throw Error('작업 보관함 저장 실패');
 }
 function refreshWorkspaceList(){
  const select=document.getElementById('workspaceSelect'),status=document.getElementById('workspaceStatus');

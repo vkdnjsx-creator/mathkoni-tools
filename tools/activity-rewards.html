@@ -544,7 +544,7 @@
             
             let allIds = new Set([...Object.keys(sys.base)]);
             dates.forEach(d => Object.keys(sys.history[d]).forEach(id => allIds.add(id)));
-            for(let s in sys.board) sys.board[s].forEach(id => allIds.add(id));
+            const boardTotals=new Map();for(const [s,ids] of Object.entries(sys.board))for(const id of ids){allIds.add(id);boardTotals.set(id,(boardTotals.get(id)||0)+Number(s));}
 
             let tableData = Array.from(allIds).map(id => {
                 let cls = extractClass(id);
@@ -558,8 +558,7 @@
                     dateScores[d] = s; histSum += s;
                 });
                 
-                let boardSum = 0;
-                for(let s in sys.board) boardSum += (sys.board[s].filter(x => x === id).length * Number(s));
+                const boardSum=boardTotals.get(id)||0;
 
                 let newEarned = histSum + boardSum; 
                 let rawTotal = base + newEarned; 
@@ -583,7 +582,7 @@
 
             tableData.sort((a, b) => {
                 let vA = a[sortConfig.key], vB = b[sortConfig.key];
-                if(sortConfig.key === 'id') return sortConfig.direction === 'asc' ? (vA < vB ? -1 : 1) : (vA > vB ? -1 : 1);
+                if(sortConfig.key === 'id') return (sortConfig.direction==='asc'?1:-1)*String(vA).localeCompare(String(vB),'ko',{numeric:true});
                 return sortConfig.direction === 'asc' ? vA - vB : vB - vA;
             });
 

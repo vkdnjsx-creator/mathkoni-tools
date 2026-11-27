@@ -33,6 +33,8 @@ layout: null
 {% assign description = '도구 실행' %}
 {% if file.basename == 'eval-manager' %}{% assign title = '수행평가 관리' %}{% assign description = '일괄 채점 · 반별 평균 · 개별 결과표' %}{% endif %}
 {% if file.basename == 'achievement-target' %}{% assign title = '성취도 목표점수' %}{% assign description = 'A·B·C·D 목표점수 계산 · 학생별 안내지' %}{% endif %}
+{% if file.basename == 'smart-seating' %}{% assign title = '스마트 자리배치' %}{% assign description = '자리 배치 · 학생 명단 · 출석부 · A4 인쇄' %}{% endif %}
+{% if file.basename == 'activity-rewards' %}{% assign title = '활동수학 점수·상점' %}{% assign description = '활동 점수 누계 · 반별 상점 지급 · 엑셀 내보내기' %}{% endif %}
 <a href="#tool={{ file.path | uri_escape }}" data-path="{{ file.path | escape }}" data-url="{{ file.path | relative_url | uri_escape | escape }}" data-description="{{ description | escape }}"><span class="mark">▤</span><span class="name">{{ title | escape }}</span></a>
 {% endif %}
 {% endfor %}

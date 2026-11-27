@@ -257,12 +257,39 @@ html.portal-embedded .app-main .bottom-btn-group{margin-top:8px}
 html.portal-embedded .watermark-web{font-size:15px;pointer-events:none}
 @media(max-width:760px){html.portal-embedded .container{padding:7px}html.portal-embedded .app-layout{grid-template-columns:minmax(0,1fr)}html.portal-embedded .app-sidebar{max-height:none;position:relative}html.portal-embedded .app-topbar h2{font-size:16px}html.portal-embedded .app-main .table-container{max-height:70vh;min-height:160px}}
 }
+/* Always-visible horizontal work menu, standalone and embedded. */
+@media screen {
+body .app-layout,html.portal-embedded body .app-layout,html.portal-embedded body.sidebar-collapsed .app-layout{display:flex;flex-direction:column;gap:9px;align-items:stretch}
+body .app-sidebar.top-work-menu,html.portal-embedded body .app-sidebar.top-work-menu,body.sidebar-collapsed .app-sidebar.top-work-menu{display:block;position:relative;top:auto;max-height:none;overflow:visible;padding:0;border:0;background:transparent;border-radius:0}
+.work-menu-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;border-bottom:1px solid #dce3ec;padding:0 0 7px}
+.work-menu-tab,.work-menu-close{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:6px;padding:8px 12px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.work-menu-tab:hover,.work-menu-close:hover{background:#eef3f9}
+.work-menu-tab[aria-expanded="true"]{color:#174e97;background:#e5eefc;border-color:#94b6e2}
+.work-menu-tab[aria-expanded="true"]::after{content:' ▴'}.work-menu-tab[aria-expanded="false"]::after{content:' ▾'}
+.work-menu-close{margin-left:auto}
+.work-menu-panel[hidden],.work-menu-close[hidden]{display:none!important}
+.work-menu-panel{background:#f8fafc;border:1px solid #dce3ec;border-radius:8px;margin:7px 0 0;max-height:45vh;overflow:auto}
+.work-menu-panel .side-body{padding:12px;max-width:none}
+.work-menu-panel .side-manager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.work-menu-panel .side-action-stack{display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:7px}
+.work-menu-panel .side-action-stack>span:first-child{width:100%}
+.work-menu-panel .side-action-stack>button,.work-menu-panel .side-action-stack>.action-btn{width:auto;min-height:34px;padding:7px 10px}
+.work-menu-panel .side-action-stack>input[type=file]{max-width:240px!important;width:auto}
+.work-menu-panel .side-action-stack>label{flex:0 1 auto}
+.work-menu-panel-1 .side-body>div:has(#excelInput)>div:first-child{flex-direction:row!important;align-items:center!important;flex-wrap:wrap}
+.work-menu-panel-1 .side-body>div:has(#excelInput)>div:first-child>div{flex-direction:row;flex-wrap:wrap;align-items:center}
+.work-menu-panel .tab-setting{flex-direction:row;flex-wrap:wrap;align-items:center}
+body .app-main{width:100%;min-width:0}
+body .main-heading,html.portal-embedded .main-heading{display:none}
+html.portal-embedded .app-main .table-container{max-height:calc(100vh - 190px);min-height:200px}
+@media(max-width:760px){.work-menu-tabs{gap:4px}.work-menu-tab,.work-menu-close{font-size:12px;padding:7px 8px}.work-menu-panel .side-manager{grid-template-columns:minmax(0,1fr)}.work-menu-panel{max-height:55vh}.work-menu-panel-1 .side-body>div:has(#excelInput)>div:first-child>div{flex-direction:column;align-items:flex-start}}
+}
     </style>
 <script>if(window.self!==window.top)document.documentElement.classList.add('portal-embedded');</script>
 </head>
 <body>
 <div class="watermark-web">출처 mathkoni</div>
-<div class="container"><header class="app-topbar"><button aria-controls="appSidebar" aria-expanded="true" class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" type="button">☰ 메뉴 접기</button><h2>📝 수행평가 일괄 평가 시스템</h2><span class="app-subtitle">학생별 채점 · 자동 저장</span></header>
+<div class="container"><header class="app-topbar"><h2>📝 수행평가 일괄 평가 시스템</h2><span class="app-subtitle">학생별 채점 · 자동 저장</span></header>
 
 
 
@@ -276,7 +303,7 @@ html.portal-embedded .watermark-web{font-size:15px;pointer-events:none}
 
 
 
-<div class="app-layout"><aside aria-label="작업 메뉴" class="app-sidebar" id="appSidebar"><div class="side-title"><strong>작업 메뉴</strong><span>필요한 메뉴만 펼쳐 사용하세요</span></div><details class="side-group"><summary>파일 저장 · 불러오기</summary><div class="side-body"><p class="side-hint">작업 내용을 다른 HTML에서도 쓰려면 전체 백업 JSON을 저장하세요.</p><div class="side-manager">
+<div class="app-layout"><aside aria-label="작업 메뉴" class="app-sidebar top-work-menu" id="appSidebar"><nav class="work-menu-tabs" aria-label="작업 메뉴"><button type="button" class="work-menu-tab" id="workMenuTab0" aria-controls="workMenuPanel0" aria-expanded="false" data-work-panel="0">파일 저장 · 불러오기</button><button type="button" class="work-menu-tab" id="workMenuTab1" aria-controls="workMenuPanel1" aria-expanded="false" data-work-panel="1">명단 입력 · 학생 추가</button><button type="button" class="work-menu-tab" id="workMenuTab2" aria-controls="workMenuPanel2" aria-expanded="false" data-work-panel="2">인쇄 · 결과 내보내기</button><button type="button" class="work-menu-tab" id="workMenuTab3" aria-controls="workMenuPanel3" aria-expanded="false" data-work-panel="3">입력 및 이동 설정</button><button type="button" class="work-menu-tab" id="workMenuTab4" aria-controls="workMenuPanel4" aria-expanded="false" data-work-panel="4">사용 방법</button><button type="button" class="work-menu-close" id="workMenuClose" hidden>닫기 ×</button></nav><div class="work-menu-panels"><section class="work-menu-panel work-menu-panel-0" id="workMenuPanel0" aria-labelledby="workMenuTab0" hidden><div class="side-body"><p class="side-hint">작업 내용을 다른 HTML에서도 쓰려면 전체 백업 JSON을 저장하세요.</p><div class="side-manager">
 <div class="side-action-stack">
 <span style="font-weight: bold; color: #f57f17; min-width: 150px;">📁 반별 데이터 관리:</span>
 <button class="action-btn btn-secondary" onclick="downloadPreviousAutoSave()">🛟 자동저장 복구본 다운로드</button>
@@ -291,7 +318,7 @@ html.portal-embedded .watermark-web{font-size:15px;pointer-events:none}
 <button class="action-btn" onclick="openImportPicker('fileInputConfig')" style="background-color: #00bcd4; color: white;">📂 평가 설정 템플릿 불러오기</button>
 <input accept=".json,application/json" aria-label="평가 설정 JSON 파일 선택" id="fileInputConfig" style="display:inline-block;max-width:250px;" type="file"/>
 </div>
-</div><div aria-live="polite" id="importStatus" role="status" style="padding:10px;background:#e3f2fd;border:1px solid #90caf9;border-radius:5px;margin:8px 0;">파일을 선택하면 여기에 진행 상황이 표시됩니다. 파일 선택 창이 열리지 않으면 오른쪽의 '파일 선택'을 직접 이용하세요.</div><div id="restoreWarning" role="alert" style="display:none;background:#fff3e0;color:#a84300;border:1px solid #ffcc80;padding:12px;margin:12px 0;border-radius:6px;font-weight:bold;"></div></div></details><details class="side-group" open=""><summary>명단 입력 · 학생 추가</summary><div class="side-body"><p class="side-hint">명단을 붙여넣거나 기존 명단에 학생을 추가할 수 있습니다.</p><div>
+</div><div aria-live="polite" id="importStatus" role="status" style="padding:10px;background:#e3f2fd;border:1px solid #90caf9;border-radius:5px;margin:8px 0;">파일을 선택하면 여기에 진행 상황이 표시됩니다. 파일 선택 창이 열리지 않으면 오른쪽의 '파일 선택'을 직접 이용하세요.</div><div id="restoreWarning" role="alert" style="display:none;background:#fff3e0;color:#a84300;border:1px solid #ffcc80;padding:12px;margin:12px 0;border-radius:6px;font-weight:bold;"></div></div></section><section class="work-menu-panel work-menu-panel-1" id="workMenuPanel1" aria-labelledby="workMenuTab1" hidden><div class="side-body"><p class="side-hint">명단을 붙여넣거나 기존 명단에 학생을 추가할 수 있습니다.</p><div>
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 13px; flex-wrap: wrap; gap: 8px;">
 <span style="color: #1565c0; font-weight: bold;">💡 '학번/이름' 또는 '학년/반/번호/이름'을 복사해 붙여넣으세요. (구분자: 탭, 공백, /, , 모두 자동 인식)</span>
 <div style="background: #e3f2fd; padding: 5px 12px; border-radius: 4px; border: 1px solid #90caf9;">
@@ -304,11 +331,11 @@ html.portal-embedded .watermark-web{font-size:15px;pointer-events:none}
 <textarea id="excelInput" placeholder="이곳은 '명단(학번/이름 또는 학년/반/번호/이름)'을 붙여넣는 곳입니다.
 예시: 1 3 1 홍길동(➔1301) / 1 03 1 홍길동(➔10301) / 1/10/1/김철수(➔11001)
 점수(숫자) 일괄 붙여넣기는 아래 표 안의 [📋 영역 일괄붙여넣기] 또는 세부항목별 [📋 일괄붙여넣기] 버튼을 누르세요."></textarea>
-</div><div class="side-action-stack"><button class="action-btn btn-primary" onclick="generateFromExcel()">📋 명단 불러오기</button><button class="action-btn btn-secondary" onclick="generateEmptyRows(500)">빈 칸 500개 만들기</button><label>학생 추가 <input id="addStudentCount" max="5000" min="1" style="width:65px;padding:8px" type="number" value="1"/>명</label><button class="action-btn btn-primary" onclick="appendEmptyStudents()">➕ 학생 추가</button><button class="action-btn btn-secondary" onclick="generateFromExcel(true)">📋 입력창 명단 추가</button></div></div></details><details class="side-group"><summary>인쇄 · 결과 내보내기</summary><div class="side-body"><p class="side-hint">흑백 출력과 학생별 평균 표시를 설정합니다.</p><div class="side-action-stack"><button class="action-btn btn-copy" onclick="copyAllToExcel()">📋 전체 결과 엑셀 복사</button><button class="action-btn btn-copy-feedback" onclick="copyIndividualReports()">📝 텍스트 피드백 복사</button><button class="action-btn btn-print" onclick="printIndividualReports()">🖨️ 1인 1페이지 결과표 인쇄</button><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowRules" type="checkbox"/>인쇄 시 평가 기준표 포함</label><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowAverages" type="checkbox"/>반·전체 평균 표시</label></div></div></details><details class="side-group"><summary>입력 및 이동 설정</summary><div class="side-body"><div class="tab-setting">
+</div><div class="side-action-stack"><button class="action-btn btn-primary" onclick="generateFromExcel()">📋 명단 불러오기</button><button class="action-btn btn-secondary" onclick="generateEmptyRows(500)">빈 칸 500개 만들기</button><label>학생 추가 <input id="addStudentCount" max="5000" min="1" style="width:65px;padding:8px" type="number" value="1"/>명</label><button class="action-btn btn-primary" onclick="appendEmptyStudents()">➕ 학생 추가</button><button class="action-btn btn-secondary" onclick="generateFromExcel(true)">📋 입력창 명단 추가</button></div></div></section><section class="work-menu-panel work-menu-panel-2" id="workMenuPanel2" aria-labelledby="workMenuTab2" hidden><div class="side-body"><p class="side-hint">흑백 출력과 학생별 평균 표시를 설정합니다.</p><div class="side-action-stack"><button class="action-btn btn-copy" onclick="copyAllToExcel()">📋 전체 결과 엑셀 복사</button><button class="action-btn btn-copy-feedback" onclick="copyIndividualReports()">📝 텍스트 피드백 복사</button><button class="action-btn btn-print" onclick="printIndividualReports()">🖨️ 1인 1페이지 결과표 인쇄</button><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowRules" type="checkbox"/>인쇄 시 평가 기준표 포함</label><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:#334155"><input checked="" id="printShowAverages" type="checkbox"/>반·전체 평균 표시</label></div></div></section><section class="work-menu-panel work-menu-panel-3" id="workMenuPanel3" aria-labelledby="workMenuTab3" hidden><div class="side-body"><div class="tab-setting">
 <span>⌨️ 키보드(Tab / Enter) 누를 때 이동할 방향:</span>
 <label><input checked="" name="tabDirection" type="radio" value="vertical"/> ⬇️ 아래 학생으로 이동 (추천)</label>
 <label><input name="tabDirection" type="radio" value="horizontal"/> ➡️ 우측 다음 항목으로 이동</label>
-</div></div></details><details class="side-group"><summary>사용 방법</summary><div class="side-body"><div class="guide">
+</div></div></section><section class="work-menu-panel work-menu-panel-4" id="workMenuPanel4" aria-labelledby="workMenuTab4" hidden><div class="side-body"><div class="guide">
 <div class="guide-text">
 <h4>💡 요약 안내 <span style="font-size:12px; font-weight:normal; color:#e65100; margin-left:10px;">(✅ 모든 입력 시 실시간 자동 저장됨)</span></h4>
 <ul>
@@ -317,7 +344,7 @@ html.portal-embedded .watermark-web{font-size:15px;pointer-events:none}
 </ul>
 </div>
 <button class="btn-tutorial" onclick="openTutorialModal()">📖 처음이신가요? 사용 방법 한눈에 보기</button>
-</div></div></details></aside><main class="app-main" id="appMain"><div class="main-heading"><div><h3>학생 채점표</h3><p>학번·이름 검색 후 점수를 입력하세요. 변경 사항은 자동 저장됩니다.</p></div><button class="main-settings-btn" onclick="document.getElementById('settingsDetails').open = !document.getElementById('settingsDetails').open; if(document.getElementById('settingsDetails').open) document.getElementById('settingsDetails').scrollIntoView({behavior:'smooth',block:'start'})" type="button">⚙ 평가 설정</button></div><div class="settings-panel">
+</div></div></section></div></aside><main class="app-main" id="appMain"><div class="main-heading"><div><h3>학생 채점표</h3><p>학번·이름 검색 후 점수를 입력하세요. 변경 사항은 자동 저장됩니다.</p></div><button class="main-settings-btn" onclick="document.getElementById('settingsDetails').open = !document.getElementById('settingsDetails').open; if(document.getElementById('settingsDetails').open) document.getElementById('settingsDetails').scrollIntoView({behavior:'smooth',block:'start'})" type="button">⚙ 평가 설정</button></div><div class="settings-panel">
 <details id="settingsDetails">
 <summary>⚙ 평가 기준 및 환산 설정 펼치기</summary>
 <div style="background-color: #fffde7; padding: 12px 15px; border-radius: 5px; margin: 15px 0; border: 1px dashed #fbc02d; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
@@ -2384,16 +2411,26 @@ html.portal-embedded .watermark-web{font-size:15px;pointer-events:none}
     };
 
 
-// 좌측 작업 패널 표시 설정 (학생 데이터와 별도 저장)
-window.toggleSidebar = function(forceState) {
-    const collapsed = typeof forceState === 'boolean' ? forceState : !document.body.classList.contains('sidebar-collapsed');
-    document.body.classList.toggle('sidebar-collapsed', collapsed);
-    const btn = document.getElementById('sidebarToggle');
-    if (btn) { btn.textContent = collapsed ? '☰ 메뉴 펼치기' : '☰ 메뉴 접기'; btn.setAttribute('aria-expanded', String(!collapsed)); }
-    try { localStorage.setItem('mathDiary_sidebarCollapsed', collapsed ? '1' : '0'); } catch(e) { /* file storage may be disabled */ }
-};
-(function() {
-    try { if (localStorage.getItem('mathDiary_sidebarCollapsed') === '1') toggleSidebar(true); } catch(e) { /* unavailable storage */ }
+// 상단 메뉴: 메뉴 이름은 항상 표시하고 선택한 기능 패널만 펼칩니다.
+(function(){
+    const buttons=Array.from(document.querySelectorAll('.work-menu-tab'));
+    const close=document.getElementById('workMenuClose');
+    let active=-1;
+    function show(index,focus=false){
+        active=index;
+        buttons.forEach((button,i)=>{
+            const open=i===index;
+            button.setAttribute('aria-expanded',String(open));
+            document.getElementById('workMenuPanel'+i).hidden=!open;
+        });
+        close.hidden=index<0;
+        if(focus&&index>=0)buttons[index].focus();
+    }
+    buttons.forEach((button,i)=>button.addEventListener('click',()=>show(active===i?-1:i)));
+    close.addEventListener('click',()=>{const previous=active;show(-1);if(previous>=0)buttons[previous].focus();});
+    document.getElementById('appSidebar').addEventListener('keydown',event=>{if(event.key==='Escape'&&active>=0){event.preventDefault();const previous=active;show(-1);buttons[previous].focus();}});
+    window.toggleSidebar=function(){show(-1)};
+    show(-1);
 })();
 </script>
 </body>

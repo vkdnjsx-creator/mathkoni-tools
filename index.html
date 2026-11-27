@@ -20,10 +20,14 @@ layout: null
 .work{display:flex;min-height:0;min-width:0;overflow:hidden;flex-direction:column}.frame{width:100%;height:100%;flex:1;min-height:0;border:0;display:block;background:#fff}.home{flex:1;overflow:auto;padding:clamp(20px,4vw,50px)}.hero{max-width:1000px;margin:0 auto}.hero h1{font-size:clamp(24px,4vw,38px);letter-spacing:-1px;margin:0 0 10px}.hero p{color:#5b6d80;margin:0 0 24px;line-height:1.65}.search{width:min(100%,340px);padding:10px;border:1px solid #d5dfe9;border-radius:8px;background:#fff;color:#24394f;margin-bottom:16px}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,270px),1fr));gap:14px}.card{display:block;padding:24px;background:#fff;border:1px solid #dce3eb;border-radius:12px;text-decoration:none;color:#1b3553}.card:hover{border-color:#668dc2;background:#fafdff}.card strong{display:block;font-size:19px;margin:8px 0}.card span{font-size:13px;color:#5d7188}.notice{margin-top:24px!important;padding-top:18px;border-top:1px solid #dce3eb;font-size:13px}
 @media(max-width:700px){.top{flex-wrap:wrap;gap:5px;padding:6px 8px}.brand{font-size:18px}.right{margin-left:auto}.quick-switch{display:block}.menu{order:3;flex-basis:100%;padding:1px 0 3px}.menu a{padding:7px 9px;font-size:12px}.utility{padding:6px 8px}.tools{gap:4px}}
 @media(max-width:390px){.quick-switch{display:none}}
+
+.entry-screen{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px;background:#eef2f7}.entry-card{width:min(100%,420px);background:white;border:1px solid #dce3eb;border-radius:16px;padding:32px;box-shadow:0 12px 40px #1b355312}.entry-brand{font-size:25px;font-weight:850;letter-spacing:-.8px;color:#243e5b}.entry-card h1{font-size:21px;margin:18px 0 6px}.entry-card p{font-size:14px;color:#596c80;line-height:1.6;margin:0 0 20px}.entry-card label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.entry-card input{width:100%;border:1px solid #aebed1;border-radius:8px;padding:12px;font-size:16px}.entry-card button{width:100%;background:#2458a6;color:white;font-weight:750;border:0;border-radius:8px;padding:12px;margin-top:12px}.entry-card button:disabled{opacity:.65;cursor:wait}.entry-card #entryStatus{margin:12px 0 0;color:#a12626;min-height:20px;font-size:13px}.entry-card .entry-note{font-size:12px;color:#718096;margin:16px 0 0}.lock-btn{flex:none}
 </style>
+<script src="./assets/entry-lock.js?v=1"></script>
 </head>
 <body>
-<div class="app" id="app">
+<section id="entryScreen" class="entry-screen"><div class="entry-card"><div class="entry-brand">mathkoni</div><h1>교사 업무 지원 도구</h1><p>이용 비밀번호를 입력해 주세요.</p><form id="entryForm"><label for="entryPassword">비밀번호</label><input id="entryPassword" type="password" required autocomplete="current-password" autofocus><button id="entrySubmit" type="submit">입장하기</button></form><p id="entryStatus" role="status" aria-live="polite"></p><p class="entry-note">비밀번호는 현재 접속 탭에서만 확인됩니다. 업무 종료 후 로그아웃하세요.</p><noscript>이 홈페이지는 JavaScript를 사용해야 합니다.</noscript></div></section>
+<div class="app" id="app" hidden>
 <header class="top"><a class="brand" href="#home">mathkoni</a><nav class="menu" id="menu" aria-label="프로그램 목록">
 <a href="#home" data-home><span class="mark">⌂</span><span>홈</span></a>
 {% assign tool_files = site.static_files | sort: "path" %}
@@ -40,10 +44,10 @@ layout: null
 {% if file.basename == 'hiedu-sms' %}{% assign title = '문자발송 스마트입력' %}{% assign description = '연락처 관리 · 대상자 선택 · 엑셀 다운로드' %}{% endif %}
 {% if file.basename == 'merit-entry' %}{% assign title = '상벌점 단체입력' %}{% assign description = '개인 PC 명단 등록 · 상벌점 일괄 입력' %}{% endif %}
 {% if file.basename == 'data-manager' %}{% assign title = '통합 데이터 관리' %}{% assign description = '개인 브라우저 자료 전체 백업 · 선택 복원' %}{% endif %}
-<a href="#tool={{ file.path | uri_escape }}" data-path="{{ file.path | escape }}" data-url="{{ file.path | relative_url | uri_escape | escape }}{% if file.basename == 'merit-entry' or file.basename == 'data-manager' %}?v=20261127-audit9{% elsif file.basename == 'eval-manager' or file.basename == 'assessment-integrated' or file.basename == 'achievement-target' %}?v=20261127-audit9{% endif %}" data-description="{{ description | escape }}"><span class="mark">▤</span><span class="name">{{ title | escape }}</span></a>
+<a href="#tool={{ file.path | uri_escape }}" data-path="{{ file.path | escape }}" data-url="{{ file.path | relative_url | uri_escape | escape }}{% if file.basename == 'merit-entry' or file.basename == 'data-manager' %}?v=20261127-entry1{% else %}?v=20261127-entry1{% endif %}" data-description="{{ description | escape }}"><span class="mark">▤</span><span class="name">{{ title | escape }}</span></a>
 {% endif %}
 {% endfor %}
-</nav><div class="right"><select id="quickSwitch" class="quick-switch" aria-label="프로그램 바로 전환"><option value="">홈</option></select><div class="bar" id="bar" hidden><h1 id="heading"></h1><div class="tools"><a class="utility" id="openTab" target="_blank" rel="noopener">새 창</a><button class="utility" id="full" type="button">화면 확대</button></div></div></div></header>
+</nav><div class="right"><button class="utility lock-btn" id="entryLogout" type="button">로그아웃</button><select id="quickSwitch" class="quick-switch" aria-label="프로그램 바로 전환"><option value="">홈</option></select><div class="bar" id="bar" hidden><h1 id="heading"></h1><div class="tools"><a class="utility" id="openTab" target="_blank" rel="noopener">새 창</a><button class="utility" id="full" type="button">화면 확대</button></div></div></div></header>
 <main class="work">
 <section class="home" id="home"><div class="hero"><h1>교사 업무 지원 도구</h1><p>필요한 프로그램을 선택해 작업을 시작하세요. 입력 자료는 사용 중인 브라우저에만 저장되며 서버로 전송되지 않습니다.</p><input class="search" id="search" type="search" placeholder="프로그램 검색" aria-label="프로그램 검색"><div class="cards" id="cards"></div><p id="noResults" hidden>검색 결과가 없습니다.</p><p class="notice">학생 명단·연락처·성적을 GitHub에 업로드하지 마세요. 다른 PC와 자료가 자동 공유되지 않습니다. 같은 브라우저 프로필을 공유하면 자료에 접근할 수 있으므로 개인 OS 계정 또는 브라우저 프로필을 사용하세요. 브라우저 데이터 삭제에 대비해 통합 데이터 관리에서 주기적으로 JSON 백업을 보관하세요. 기존 로컬 HTML의 자료는 자동 이전되지 않습니다.</p></div></section>
 <iframe class="frame" id="frame" title="업무 도구" allowfullscreen hidden></iframe></main>
@@ -55,8 +59,26 @@ for(const link of links){const option=document.createElement('option');option.va
 $('quickSwitch').onchange=()=>{const link=links.find(x=>x.dataset.path===$('quickSwitch').value);location.hash=link?link.getAttribute('href'):'#home'};
 function showCards(){const frag=document.createDocumentFragment();for(const link of links){const a=document.createElement('a');a.className='card';a.href=link.getAttribute('href');a.dataset.path=link.dataset.path;const icon=document.createElement('span');icon.textContent='업무 도구';const strong=document.createElement('strong');strong.textContent=link.querySelector('.name').textContent;const desc=document.createElement('span');desc.textContent=link.dataset.description;a.append(icon,strong,desc);frag.append(a)}$('cards').replaceChildren(frag);if(!links.length)$('cards').textContent='등록된 프로그램이 없습니다.'}
 showCards();
-function route(){let path='';try{if(location.hash.startsWith('#tool='))path=decodeURIComponent(location.hash.slice(6))}catch(_){}const link=links.find(x=>x.dataset.path===path);const nextPath=link?link.dataset.path:'';app.classList.toggle('tool-open',!!link);$('quickSwitch').value=nextPath;for(const l of links){l.classList.toggle('active',l===link);if(l===link)l.setAttribute('aria-current','page');else l.removeAttribute('aria-current')}const homeLink=$('menu').querySelector('[data-home]');homeLink.classList.toggle('active',!link);if(!link)homeLink.setAttribute('aria-current','page');else homeLink.removeAttribute('aria-current');if(link)link.scrollIntoView({block:'nearest',inline:'nearest'});$('home').hidden=!!link;$('bar').hidden=!link;$('frame').hidden=!link;if(link){const title=link.querySelector('.name').textContent;$('heading').textContent=title;$('frame').title=title;$('openTab').href=link.dataset.url;if($('frame').getAttribute('src')!==link.dataset.url)$('frame').src=link.dataset.url}else if($('frame').hasAttribute('src'))$('frame').removeAttribute('src')}
-window.addEventListener('hashchange',route);route();
+function route(){if(!window.mathkoniEntry?.allowed()||app.hidden)return;let path='';try{if(location.hash.startsWith('#tool='))path=decodeURIComponent(location.hash.slice(6))}catch(_){}const link=links.find(x=>x.dataset.path===path);const nextPath=link?link.dataset.path:'';app.classList.toggle('tool-open',!!link);$('quickSwitch').value=nextPath;for(const l of links){l.classList.toggle('active',l===link);if(l===link)l.setAttribute('aria-current','page');else l.removeAttribute('aria-current')}const homeLink=$('menu').querySelector('[data-home]');homeLink.classList.toggle('active',!link);if(!link)homeLink.setAttribute('aria-current','page');else homeLink.removeAttribute('aria-current');if(link)link.scrollIntoView({block:'nearest',inline:'nearest'});$('home').hidden=!!link;$('bar').hidden=!link;$('frame').hidden=!link;if(link){const title=link.querySelector('.name').textContent;$('heading').textContent=title;$('frame').title=title;$('openTab').href=link.dataset.url;if($('frame').getAttribute('src')!==link.dataset.url)$('frame').src=link.dataset.url}else if($('frame').hasAttribute('src'))$('frame').removeAttribute('src')}
+function showEntry(){
+ app.hidden=true;$('frame').removeAttribute('src');$('entryScreen').hidden=false;$('entryPassword').value='';$('entryPassword').focus();
+}
+function enter(){
+ if(!window.mathkoniEntry?.allowed()){showEntry();return}
+ $('entryScreen').hidden=true;app.hidden=false;$('entryPassword').value='';$('entryStatus').textContent='';route();
+}
+let verifying=false,failures=0;
+$('entryForm').onsubmit=async e=>{
+ e.preventDefault();if(verifying)return;
+ if(!window.mathkoniEntry){$('entryStatus').textContent='접속 모듈을 불러오지 못했습니다. 새로고침해 주세요.';return}
+ verifying=true;$('entrySubmit').disabled=true;
+ try{const ok=await mathkoniEntry.unlock($('entryPassword').value);$('entryPassword').value='';
+ if(ok){failures=0;enter()}else{failures++;$('entryStatus').textContent='비밀번호가 일치하지 않습니다.';if(failures>=3)await new Promise(r=>setTimeout(r,1500));$('entryPassword').focus()}
+ }catch(err){$('entryStatus').textContent='입장할 수 없습니다. HTTPS 연결 및 브라우저 저장 설정을 확인해 주세요.'}
+ finally{verifying=false;$('entrySubmit').disabled=false}
+};
+$('entryLogout').onclick=()=>{if(!confirm('현재 탭에서 로그아웃할까요? 자동저장 자료는 유지됩니다.'))return;showEntry();try{mathkoniEntry.lock()}catch(_){}location.reload()};
+window.addEventListener('hashchange',route);window.addEventListener('pageshow',()=>{if(!window.mathkoniEntry?.allowed())showEntry()});enter();
 $('search').oninput=()=>{let q=$('search').value.trim().toLowerCase(),count=0;for(const a of $('cards').querySelectorAll('.card')){a.hidden=!!q&&!a.textContent.toLowerCase().includes(q);if(!a.hidden)count++}$('noResults').hidden=count>0||!links.length};
 $('full').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else if($('frame').requestFullscreen)await $('frame').requestFullscreen();else window.open($('openTab').href,'_blank','noopener')}catch(_){alert('화면 확대가 제한되어 있습니다. 새 창 버튼을 사용하세요.')}};
 </script>

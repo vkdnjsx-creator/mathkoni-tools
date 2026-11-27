@@ -245,7 +245,7 @@
                             <span class="toggle-label">📅 과거 펼치기</span>
                         </label>
                         <div class="limit-input-wrap">
-                            최대 상점 한도 <input type="number" id="maxRewardInput" value="10" min="1" onchange="renderTable()"> 
+                            최대 상점 한도 <input type="number" id="maxRewardInput" value="10" min="1" step="1" onchange="this.value=rewardLimit(this.value);renderTable()"> 
                         </div>
                     </div>
                     <input type="text" id="searchInput" class="search-box" placeholder="🔍 학번 검색..." oninput="onSearchInput()">
@@ -263,7 +263,7 @@
             
             <div class="export-actions">
                 <button class="btn-copy-final" onclick="copyFinalScores()">📋 화면에 보이는 상점 획득자만 복사 (학번 + 상점 + 남은점수)</button>
-                <button class="btn-csv" onclick="downloadCSV()">⬇️ 전체 상세 내역 엑셀 다운로드 (.csv)</button>
+                <button class="btn-csv" onclick="downloadCSV()">⬇️ 조회된 상세 내역 엑셀 다운로드 (.csv)</button><button class="btn-sys" onclick="downloadGrantHistory()">지급 이력 CSV</button>
             </div>
         </div>
     </div>
@@ -314,35 +314,58 @@
             return strId.length >= 3 ? strId.slice(0, -2) : '기타';
         }
 
-        function saveToLocal() { 
-            localStorage.setItem('scoreSysVFinal_AutoSave', JSON.stringify(sys)); 
-            
-            // 시각적 피드백 제공
-            const indicator = document.getElementById('autoSaveIndicator');
-            if(indicator) {
-                indicator.innerHTML = "💾 실시간 저장됨!";
-                indicator.style.color = "#10b981";
-                indicator.style.backgroundColor = "#d1fae5";
-                setTimeout(() => {
-                    indicator.innerHTML = "🟢 자동 저장 켜짐";
-                    indicator.style.color = "#64748b";
-                    indicator.style.backgroundColor = "#e2e8f0";
-                }, 1500);
-            }
-        }
 
+        const REWARD_KEY='scoreSysVFinal_AutoSave';
+        let rewardBaseline=null,rewardBlocked=false,rewardStatusTimer;
+        function validRewardId(v){return /^[1-9]\d{3,4}$/.test(String(v))&&Number(String(v).slice(1,-2))>0&&Number(String(v).slice(-2))>0}
+        function validRewardScore(v){return /^\d+$/.test(String(v))&&Number.isSafeInteger(Number(v))&&Number(v)>=0}
+        function rewardLimit(v){return validRewardScore(v)&&Number(v)>0?Number(v):10}
+        function rewardDate(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+        function parseRewardRows(input,allowZero=true){
+            const result=[],errors=[],seen=new Set();
+            input.split(/\r?\n/).forEach((line,i)=>{
+                if(!line.trim())return;
+                const cols=line.trim().split(/[\s,]+/);
+                if(/^(학번|학생번호)$/.test(cols[0]))return;
+                if(cols.length!==2||!validRewardId(cols[0])||!validRewardScore(cols[1])||(!allowZero&&Number(cols[1])===0)||seen.has(cols[0])){errors.push(i+1);return}
+                seen.add(cols[0]);result.push([cols[0],Number(cols[1])]);
+            });
+            if(errors.length)throw Error('입력 오류 또는 중복 학번: '+errors.slice(0,20).join(', ')+'행. 아무 점수도 반영하지 않았습니다.');
+            return result;
+        }
+        function validateRewardData(o){
+            const obj=x=>x&&typeof x==='object'&&!Array.isArray(x);
+            if(!obj(o)||!obj(o.base)||!obj(o.history)||!obj(o.board))throw Error('지원하지 않는 백업 형식입니다.');
+            const scores=x=>obj(x)&&Object.entries(x).every(([id,v])=>validRewardId(id)&&validRewardScore(v));
+            if(!scores(o.base)||!Object.entries(o.history).every(([date,v])=>/^(?:\d{4}-\d{2}-\d{2}|\d{1,2}\.\s*\d{1,2}\.?)$/.test(date)&&scores(v))||!Object.entries(o.board).every(([n,ids])=>validRewardScore(n)&&Number(n)>0&&Array.isArray(ids)&&ids.every(validRewardId)))throw Error('잘못된 학번·날짜·점수가 포함된 자료입니다. 원본 백업을 확인하세요.');
+            if(o.classConvertSettings&&!obj(o.classConvertSettings))throw Error('반 설정 오류');
+            if(o.grants&&!Array.isArray(o.grants))throw Error('지급 이력 형식 오류');
+            o.classConvertSettings=o.classConvertSettings||{};o.grants=o.grants||[];
+            return o;
+        }
+        function rewardStatus(message,failed=false){
+            clearTimeout(rewardStatusTimer);const el=document.getElementById('autoSaveIndicator');el.textContent=message;el.style.color=failed?'#b91c1c':'#166534';el.style.backgroundColor=failed?'#fee2e2':'#dcfce7';
+        }
+        function saveToLocal() {
+            try {
+                const old=localStorage.getItem(REWARD_KEY);
+                if(rewardBlocked||old!==rewardBaseline)throw Error('다른 창에서 변경되었거나 복원에 실패했습니다. 현재 화면을 백업한 뒤 새로고침하세요.');
+                const next=JSON.stringify(sys);
+                if(old!==next){if(old!==null)localStorage.setItem(REWARD_KEY+'-previous',old);localStorage.setItem(REWARD_KEY,next);if(localStorage.getItem(REWARD_KEY)!==next)throw Error('저장 확인 실패');rewardBaseline=next}
+                rewardStatus('자동 저장 완료');return true;
+            }catch(e){rewardStatus('저장 실패 · 백업 필요',true);return false}
+        }
         function loadFromLocal() {
             try {
-                // 이전 버전들의 키도 확인하여 데이터 유실 방지
-                let saved = JSON.parse(localStorage.getItem('scoreSysVFinal_AutoSave')) || 
-                            JSON.parse(localStorage.getItem('scoreSysVFinalCleanUp')) ||
-                            JSON.parse(localStorage.getItem('scoreSysUltimateFix'));
-                if (saved && saved.board) {
-                    sys = saved;
-                    if (!sys.classConvertSettings) sys.classConvertSettings = {};
-                }
-            } catch(e) {}
+                rewardBaseline=localStorage.getItem(REWARD_KEY);
+                const raw=rewardBaseline??localStorage.getItem('scoreSysVFinalCleanUp')??localStorage.getItem('scoreSysUltimateFix');
+                if(raw!==null)sys=validateRewardData(JSON.parse(raw));
+                else sys.grants=[];
+                rewardStatus('자동 저장 준비 완료');
+            }catch(e){rewardBlocked=true;rewardStatus('복원 실패 · 원본 보존 중',true);alert(e.message)}
         }
+        function recordGrant(row){sys.grants=sys.grants||[];sys.grants.push({date:rewardDate(),time:new Date().toISOString(),id:row.id,reward:row.finalReward,rawTotal:row.rawTotal,remainder:row.actualRemainder})}
+
 
         function saveToFile() {
             const blob = new Blob([JSON.stringify(sys, null, 2)], { type: "application/json" });
@@ -359,12 +382,14 @@
             const reader = new FileReader();
             reader.onload = (event) => {
                 try {
-                    let parsed = JSON.parse(event.target.result);
-                    if (parsed.board) { 
+                    let parsed = validateRewardData(JSON.parse(event.target.result));
+                    if (parsed.board && confirm('현재 자료를 백업 파일로 교체할까요?')) { 
+                        if(localStorage.getItem(REWARD_KEY)!==rewardBaseline&&!rewardBlocked)throw Error('다른 창에서 변경됨');
+                        rewardBaseline=localStorage.getItem(REWARD_KEY);rewardBlocked=false;
                         sys = parsed; 
                         if(!sys.classConvertSettings) sys.classConvertSettings = {};
-                        saveToLocal(); renderClassToggles(); renderBoard(); renderTable(); 
-                        showToast("데이터 복구 성공!"); 
+                        const saved=saveToLocal(); renderClassToggles(); renderBoard(); renderTable(); 
+                        showToast(saved?"데이터 복구 성공!":"화면 복원 완료 · 자동저장 실패",saved?"success":"error"); 
                     }
                 } catch(err) { showToast("잘못된 백업 파일입니다.", "error"); }
                 e.target.value = '';
@@ -374,7 +399,7 @@
 
         function resetAllData() {
             if (confirm("정말로 '모든 데이터'를 삭제하시겠습니까? (복구 불가)")) {
-                sys = { base: {}, history: {}, board: { 1:[], 2:[], 3:[], 4:[], 5:[] }, classConvertSettings: {} };
+                sys = { base: {}, history: {}, board: { 1:[], 2:[], 3:[], 4:[], 5:[] }, classConvertSettings: {}, grants: [] };
                 saveToLocal(); renderClassToggles(); renderBoard(); renderTable(); showToast("초기화 완료", "error");
             }
         }
@@ -387,7 +412,7 @@
             }
             if(!hasData) return showToast("보드에 마감할 데이터가 없습니다.", "error");
 
-            let dateStr = new Date().toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }).replace(/\.$/, ''); 
+            let dateStr = rewardDate(); 
             if (!sys.history[dateStr]) sys.history[dateStr] = {};
             Object.keys(boardSum).forEach(id => { sys.history[dateStr][id] = (sys.history[dateStr][id] || 0) + boardSum[id]; });
 
@@ -397,15 +422,11 @@
         }
 
         function processBulk() {
-            const input = document.getElementById('bulkInput').value;
-            if(!input.trim()) return showToast("입력창이 비어있습니다.", "error");
-            
-            input.trim().split('\n').forEach(row => {
-                let cols = row.trim().split(/\s+/);
-                if (cols.length >= 1 && cols[0]) sys.base[cols[0]] = parseInt(cols[1]) || 0;
-            });
-            document.getElementById('bulkInput').value = '';
-            saveToLocal(); renderClassToggles(); renderTable(); showToast("기존 점수 등록 완료");
+            const el=document.getElementById('bulkInput');
+            try{const rows=parseRewardRows(el.value);if(!rows.length)throw Error('등록할 자료가 없습니다.');
+            rows.forEach(([id,score])=>sys.base[id]=score);
+            el.value='';saveToLocal();renderClassToggles();renderTable();showToast('기존 점수 '+rows.length+'건 등록 완료');}
+            catch(e){showToast(e.message,'error')}
         }
 
         function selectScore(s) {
@@ -415,50 +436,19 @@
         }
 
         function addNumbers() {
-            const input = document.getElementById('numberInput');
-            const val = input.value.trim();
-            if (!val) return;
-
-            let count = 0;
-            val.split(/[\s,.]+/).forEach(item => {
-                let num = item.replace(/[^0-9]/g, '');
-                if (num) { 
-                    if (!sys.board[currentSelectedScore]) sys.board[currentSelectedScore] = [];
-                    sys.board[currentSelectedScore].push(num); count++; 
-                }
-            });
-
-            if (count > 0) {
-                input.value = ''; saveToLocal(); renderClassToggles(); renderBoard(); renderTable();
-                showToast(`${count}명에게 ${currentSelectedScore}점 부여`);
-            }
-            input.focus();
+            const el=document.getElementById('numberInput');const ids=el.value.trim().split(/[\s,.]+/).filter(Boolean);
+            if(!ids.length)return;
+            if(ids.some(x=>!validRewardId(x))||new Set(ids).size!==ids.length)return showToast('4·5자리 학번을 입력하세요. 같은 입력에 중복 학번이 있으면 반영하지 않습니다.','error');
+            if(!sys.board[currentSelectedScore])sys.board[currentSelectedScore]=[];
+            sys.board[currentSelectedScore].push(...ids);el.value='';saveToLocal();renderClassToggles();renderBoard();renderTable();showToast(ids.length+'명에게 '+currentSelectedScore+'점 부여');el.focus();
         }
 
         function processBulkActivity() {
-            const input = document.getElementById('bulkActivityInput').value;
-            if(!input.trim()) return showToast("입력창이 비어있습니다.", "error");
-            
-            let added = 0;
-            input.trim().split('\n').forEach(row => {
-                let cols = row.trim().split(/\s+/);
-                if (cols.length >= 2 && cols[0]) {
-                    let id = cols[0].replace(/[^0-9]/g, '');
-                    let score = parseInt(cols[1]);
-                    if (id && !isNaN(score)) {
-                        if (!sys.board[score]) sys.board[score] = [];
-                        sys.board[score].push(id); added++;
-                    }
-                }
-            });
-            
-            if(added > 0) {
-                document.getElementById('bulkActivityInput').value = '';
-                saveToLocal(); renderClassToggles(); renderBoard(); renderTable();
-                showToast(`총 ${added}건 일괄 등록 완료`);
-            } else {
-                showToast("형식이 올바르지 않습니다. [학번] [점수]", "error");
-            }
+            const el=document.getElementById('bulkActivityInput');
+            try{const rows=parseRewardRows(el.value,false);if(!rows.length)throw Error('등록할 자료가 없습니다.');
+            rows.forEach(([id,score])=>{if(!sys.board[score])sys.board[score]=[];sys.board[score].push(id)});
+            el.value='';saveToLocal();renderClassToggles();renderBoard();renderTable();showToast(rows.length+'건 일괄 등록 완료');}
+            catch(e){showToast(e.message,'error')}
         }
 
         function removeNumber(score, index) {
@@ -531,8 +521,8 @@
             const search = document.getElementById('searchInput').value.trim();
             const filterEarned = document.getElementById('filterEarnedToggle').checked; 
             
-            let val = parseInt(document.getElementById('maxRewardInput').value);
-            const maxRewardLimit = isNaN(val) ? 999 : val; 
+            const limitInput=document.getElementById('maxRewardInput');
+            const maxRewardLimit=rewardLimit(limitInput.value); 
 
             let dates = Object.keys(sys.history);
             
@@ -558,7 +548,7 @@
                 let newEarned = histSum + boardSum; 
                 let rawTotal = base + newEarned; 
                 
-                let calculatedReward = Math.floor(rawTotal / 5); 
+                let calculatedReward = Math.max(0, Math.floor(rawTotal / 5)); 
                 let finalReward = Math.min(calculatedReward, maxRewardLimit); 
                 let isMaxReached = calculatedReward >= maxRewardLimit; 
                 let actualRemainder = rawTotal - (finalReward * 5); 
@@ -641,10 +631,11 @@
             let { tableData } = getProcessedData();
             let row = tableData.find(x => x.id === id);
             
-            if (!row || row.finalReward <= 0) return;
+            if (!row || !row.isConverted || row.finalReward <= 0) return;
             
             if(!confirm(`[${id}] 학생에게 [ ${row.finalReward} 상점 ]을 지금 부여(지급) 하시겠습니까?\n\n※ 부여 완료 시, 남은 점수(${row.actualRemainder}점)가 새로운 '기존 점수'로 리셋되며 과거 활동 기록은 초기화됩니다.`)) return;
 
+            recordGrant(row);
             sys.base[id] = row.actualRemainder;
             
             for(let d in sys.history) {
@@ -670,6 +661,7 @@
 
             targets.forEach(row => {
                 let id = row.id;
+                recordGrant(row);
                 sys.base[id] = row.actualRemainder;
                 for(let d in sys.history) { if(sys.history[d][id]) delete sys.history[d][id]; }
                 for(let s in sys.board) { sys.board[s] = sys.board[s].filter(x => x !== id); }
@@ -738,6 +730,12 @@
             showToast("📥 엑셀 다운로드 완료!");
         }
 
+        function downloadGrantHistory(){
+            const rows=sys.grants||[];if(!rows.length)return showToast('지급 이력이 없습니다.','error');
+            const csv='\uFEFF날짜,학번,지급상점,지급전점수,남은점수\n'+rows.map(r=>[r.date,r.id,r.reward,r.rawTotal,r.remainder].map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+            const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='상점_지급이력_'+rewardDate()+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)
+        }
+        window.addEventListener('storage',e=>{if(e.key===REWARD_KEY||e.key===null){rewardBlocked=true;rewardStatus('다른 창에서 변경됨 · 백업 후 새로고침',true)}});
         window.onload = () => { 
             loadFromLocal(); renderClassToggles(); renderBoard(); renderTable(); 
         };
